@@ -11,5 +11,7 @@
             "email": "nikola.carapic@quantoxtechnology.com"
         }
     ],
-    "require": {}
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    }
 }
