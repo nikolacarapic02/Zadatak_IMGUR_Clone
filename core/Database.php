@@ -46,23 +46,21 @@ class Database
         {
             $this->saveMigrations($newMigration);
         }
-        else
-        {
-            $this->log("All migrations are applied");
-        }
+
+        $this->log("All migrations are applied");
+        
     }
 
     public function dropMigrations()
     {
-        $this->createMigrationsTable();
         $appliedMigrations = $this->getAppliedMigrations();
 
-        $newMigration = [];
         $files = scandir(Application::$ROOT_DIR.'/migrations');
-        $toApplyMigrations = array_diff($files, $appliedMigrations);
+        $toDropMigrations = array_intersect($appliedMigrations, $files);
 
-        foreach($toApplyMigrations as $migration)
+        foreach($toDropMigrations as $migration)
         {
+            
             if($migration === '.' || $migration === '..')
             {
                 continue;
@@ -75,9 +73,11 @@ class Database
             $this->log("Deleting migration $migration" . PHP_EOL);
             $instance->down();
             $this->log("Deleted migration $migration" . PHP_EOL);
-
-            $newMigration[] = $migration;
         }
+
+        $this->clearMigrationsTable();
+
+        $this->log("All migrations are deleted" . PHP_EOL);
     }
 
     public function createMigrationsTable()
@@ -87,6 +87,11 @@ class Database
             migration VARCHAR(255),
             create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=INNODB;");
+    }
+
+    public function clearMigrationsTable()
+    {
+        $this->pdo->exec("DELETE FROM migrations; ALTER TABLE migrations AUTO_INCREMENT =1");
     }
 
     public function getAppliedMigrations()
