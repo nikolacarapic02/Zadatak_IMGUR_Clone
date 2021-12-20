@@ -1,0 +1,17 @@
+{
+    "name": "nikola/zadatak_imgur_clone",
+    "autoload": {
+        "psr-4": {
+            "app\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "nikolacarapic02",
+            "email": "nikola.carapic@quantoxtechnology.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    }
+}
