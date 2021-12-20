@@ -109,10 +109,81 @@ class Database
         $statement->execute();
     }
 
+    public function getGaleries($page)
+    {
+        $limit = 16;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+
+        $start = ($page-1) * $limit;
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE nsfw != 1 AND hidden != 1 LIMIT $start, $limit");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getSingleGallery($id)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getImagesFromGallery($id)
+    {
+        $statement = $this->pdo->prepare("SELECT image_id FROM image_gallery WHERE gallery_id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getImages($page)
+    {
+        $limit = 16;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+        
+        $start = ($page-1) * $limit;
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE nsfw != 1 AND hidden != 1 LIMIT $start, $limit");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getSingleImageBySlug($slug)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE slug = '$slug'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getSingleImageById($id)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getUser($id)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM user WHERE id = $id");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function prepare($sql)
     {
         return $this->pdo->prepare($sql);
     }
+
 
     protected function log($message)
     {

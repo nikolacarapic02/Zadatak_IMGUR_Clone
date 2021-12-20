@@ -26,7 +26,7 @@ class AuthController extends Controller
             var_dump($loginForm->login());
             if($loginForm->validate() && $loginForm->login())
             {
-                $response->redirect('/');
+                $response->redirect('/profile');
                 return;
             }
         }

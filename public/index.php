@@ -2,6 +2,7 @@
 use Dotenv\Dotenv;
 use app\core\Application;
 use app\controllers\AuthController;
+use app\controllers\SiteController;
 use app\models\User;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -19,7 +20,7 @@ $config = [
 
 $app = new Application(dirname(__DIR__), $config);
 
-$app->router->get('/', 'home');
+$app->router->get('/', [SiteController::class,'home']);
 
 $app->router->get('/login', [AuthController::class, 'login']);
 $app->router->post('/login', [AuthController::class, 'login']);
@@ -27,5 +28,9 @@ $app->router->get('/register', [AuthController::class, 'register']);
 $app->router->post('/register', [AuthController::class, 'register']);
 $app->router->get('/logout', [AuthController::class, 'logout']);
 $app->router->get('/profile', [AuthController::class, 'profile']);
+$app->router->get('/photos', [SiteController::class, 'photos']);
+$app->router->get('/photo_detail', [SiteController::class, 'photo_detail']);
+$app->router->get('/galleries', [SiteController::class, 'galleries']);
+$app->router->get('/gallery_detail', [SiteController::class, 'gallery_detail']);
 
 $app->run();
