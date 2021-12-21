@@ -2,13 +2,21 @@
 
 use app\core\page\GalleryLoad;
 
+$content = new GalleryLoad(); 
+$numOfPages = $content->numOfPages();
+
 if(key_exists('page',$_GET))
 {
-    if(is_numeric($_GET['page']) &&  $_GET['page'] != 0)
+    if(is_numeric($_GET['page']) && $_GET['page'] != 0)
     {
         $page = $_GET['page'];
+
+        if($page > $numOfPages)
+        {
+            $page = $numOfPages;
+        }
     }
-    else
+    else 
     {
         $page = 1;
     }
@@ -25,32 +33,53 @@ else
             Galleries
         </h2>
         <div class="col-6 d-flex justify-content-end align-items-center">
-            <form action="#" class="tm-text-primary">
-                Page <input type="text" value="<?php echo  $page; ?>" size="<?php echo  $page; ?>" class="tm-input-paging tm-text-primary"> of 200
+            <form action="/galleries?page=" class="tm-text-primary">
+                Page <input type="text" value="<?php echo  $page; ?>" size="<?php echo  $page; ?>" class="tm-input-paging tm-text-primary" name="page"> of <?php echo $numOfPages; ?>
             </form>
         </div>
     </div>
     <div class="row tm-mb-90 tm-gallery">
     <?php
-    $content = new GalleryLoad(); 
-    $content->get();
+        $content->get();
     ?>
     </div>
     <div class="row tm-mb-90">
         <?php 
             $pageNum = $page;
-            $pageNumPre = $pageNum-1;
-            $pageNumNext = $pageNum+1;
+            if($pageNum > 1)
+            {
+                $pageNum = $pageNum - 1;
+            }
+            $pageNumPre = $page-1;
+            $pageNumNext = $page+1;
+        ?>
+        <?php 
+            if($numOfPages - $page > 2):
         ?>
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
             <a href="http://localhost:8888/galleries?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($pageNum == 1){echo 'disabled';} ?>">Previous</a>
             <div class="tm-paging d-flex">
-                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum; ?>" class="active tm-paging-link"><?php echo $pageNum; ?></a>
-                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="tm-paging-link"><?php echo $pageNum; ?></a>
-                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="tm-paging-link"><?php echo $pageNum = $pageNum; ?></a></a>
-                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="tm-paging-link"><?php echo $pageNum = $pageNum; ?></a></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a></a>
             </div>
-            <a href="http://localhost:8888/galleries?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next">Next Page</a>
-        </div>            
+            <a href="http://localhost:8888/galleries?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next <?php if($page == $numOfPages){echo 'disabled';} ?>">Next Page</a>
+        </div>   
+        <?php endif;?>
+        <?php 
+            if($numOfPages - $page <= 2): 
+        ?>  
+        <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+            <a href="http://localhost:8888/galleries?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($pageNum == 1){echo 'disabled';} ?>">Previous</a>
+            <div class="tm-paging d-flex">
+                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum = $numOfPages - 3; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 3; ?></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum = $numOfPages - 2; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 2; ?></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum = $numOfPages - 1; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 1; ?></a>
+                <a href="http://localhost:8888/galleries?page=<?php echo $pageNum = $numOfPages; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages; ?></a>
+            </div>
+            <a href="http://localhost:8888/galleries?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next <?php if($page == $numOfPages){echo 'disabled';} ?>">Next Page</a>
+        </div>
+        <?php endif; ?>        
     </div>
 </div> 

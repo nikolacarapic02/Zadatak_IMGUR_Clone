@@ -30,7 +30,10 @@ $app->router->get('/logout', [AuthController::class, 'logout']);
 $app->router->get('/profile', [AuthController::class, 'profile']);
 $app->router->get('/photos', [SiteController::class, 'photos']);
 $app->router->get('/photo_detail', [SiteController::class, 'photo_detail']);
+$app->router->post('/photo_detail', [SiteController::class, 'photo_detail']);
 $app->router->get('/galleries', [SiteController::class, 'galleries']);
 $app->router->get('/gallery_detail', [SiteController::class, 'gallery_detail']);
+$app->router->post('/gallery_detail', [SiteController::class, 'gallery_detail']);
+$app->router->get('/about', [SiteController::class, 'about']);
 
 $app->run();

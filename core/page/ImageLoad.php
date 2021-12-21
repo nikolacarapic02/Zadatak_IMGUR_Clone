@@ -69,9 +69,6 @@ class ImageLoad
 
         echo sprintf('
             <div class="container-fluid tm-container-content tm-mt-60">
-                <div class="row mb-4">
-                    <h2 class="col-12 tm-text-primary"></h2>
-                </div>
                 <div class="row tm-mb-90">            
                     <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
                         <img src="http://placekitten.com/400/400" alt="%s" class="img-fluid" id="photoDetail">
@@ -84,9 +81,6 @@ class ImageLoad
                                 </a>
                             </div>                    
                             <div class="mb-4 d-flex flex-wrap">
-                                <div class="mr-4 mb-2">
-                                    
-                                </div>
                                 <div class="mr-4 mb-2">
                                     <span class="tm-text-gray-dark">Format: </span><span class="tm-text-primary">%s</span>
                                 </div>
@@ -112,5 +106,71 @@ class ImageLoad
         $image[0]['slug'],
         $user[0]['username']
         );
+    }
+
+    public function getComments($slug)
+    {
+        $image = Application::$app->db->getSingleImageBySlug($slug);
+        $user = Application::$app->user;
+        $comments = Application::$app->db->getCommentsForImage($image[0]['id']);
+
+        if(count($comments) == 0)
+        {
+            echo '
+                <div class="d-flex flex-column comment-section">
+                    <div class="bg-white p-2">
+                        <div class="mt-2">
+                            <p class="comment-text">There is no comments</p>
+                        </div>
+                </div>
+            ';
+        }
+        else
+        {
+            while($this->i < count($comments))
+            {
+                $instance = new UserLoad($comments[$this->i]['user_id']);
+                $commentedUser = $instance->get();
+
+                echo sprintf('
+                    <div class="d-flex flex-column comment-section">
+                        <div class="bg-white p-2">
+                            <div class="d-flex flex-row user-info"><img class="rounded-circle" src="assets/img/user.png" width="40" height="40">
+                                <div class="d-flex flex-column justify-content-start ml-2"><span class="d-block font-weight-bold name">%s</span><span class="date text-black-50">Shared publicly</span></div>
+                            </div>
+                            <div class="mt-2">
+                                <p class="comment-text">%s</p>
+                            </div>
+                        </div>
+                    </div>
+                    ',
+                    $commentedUser[0]['username'],
+                    $comments[$this->i]['comment']
+                );
+
+                $this->i++;
+            }
+        }
+    }
+
+    public function createComment($comment ,$slug)
+    {
+        if(!empty($comment))
+        {
+            $comment = $_POST['comment'];
+            $userId = Application::$app->session->get('user');
+            $image = Application::$app->db->getSingleImageBySlug($slug);
+
+            Application::$app->db->createCommentForImage($userId, $image[0]['id'], $comment);
+        }
+    }
+
+    public function numOfPages()
+    {
+        $instance = Application::$app->db->getNumOfImages();
+
+        $numImg = $instance[0]['num'];
+
+        return ceil($numImg/16);
     }
 }

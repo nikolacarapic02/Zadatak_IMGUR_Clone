@@ -65,6 +65,30 @@ class Application
         return !self::$app->user;
     }
 
+    public static function isModerator()
+    {
+        if(self::$app->user['role'] == 'moderator')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static function isAdmin()
+    {
+        if(self::$app->user['role'] == 'admin')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public function setController(Controller $controller): void
     {
         $this->controller = $controller;

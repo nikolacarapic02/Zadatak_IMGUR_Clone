@@ -31,4 +31,9 @@ class SiteController extends Controller
     {
         return $this->render('gallery_detail');
     }
+
+    public function about(Request $request)
+    {
+        return $this->render('about');
+    }
 }

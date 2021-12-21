@@ -28,6 +28,21 @@ a:hover { color:#009999; }
     pointer-events: none;
 }
 
+#buttonPreNext
+{
+    width: 15%;
+}
+
+#moreButton
+{
+    width: 100%;;
+}
+
+.navbar-nav > li > .dropdown > .btn-primary:focus
+{ 
+    background-color: #086969;
+}
+
 .form-control {
 	padding: 10px 20px;
 	width: 100%;
@@ -308,6 +323,27 @@ figure.effect-ming:hover img { opacity: 0.4; }
     height: 100%;
     padding: 40px;
 }
+
+/* About */
+.tm-row-1640 { max-width: 1640px; }
+.tm-about-2-col { max-width: 716px; }
+.tm-about-3-col { max-width: 540px; }
+
+.tm-about-2-col,
+.tm-about-3-col {
+    margin-bottom: 50px;
+}
+
+.tm-about-icon-container {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #009999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-about-img-text { max-width: 940px; }
 
 @media (max-width: 767px) {
     .tm-paging-col { flex-direction: column; }

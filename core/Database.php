@@ -140,6 +140,14 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getNumOfGalleries()
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM gallery WHERE nsfw != 1 AND hidden != 1");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function getImages($page)
     {
         $limit = 16;
@@ -171,12 +179,50 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getNumOfImages()
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM image WHERE nsfw != 1 AND hidden != 1");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function getUser($id)
     {
         $statement = $this->pdo->prepare("SELECT * FROM user WHERE id = $id");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getCommentsForImage($id)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE image_id = $id");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getCommentsForGallery($id)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE gallery_id = $id");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function createCommentForImage($user_id, $image_id, $comment)
+    {
+        $statement = $this->pdo->prepare("INSERT INTO comment (user_id , image_id, comment)
+        VALUES ($user_id, $image_id, '$comment');");
+        $statement->execute();
+    }
+
+    public function createCommentForGallery($user_id, $gallery_id, $comment)
+    {
+        $statement = $this->pdo->prepare("INSERT INTO comment (user_id, gallery_id, comment)
+        VALUES ($user_id, $gallery_id, '$comment');");
+        $statement->execute();
     }
 
     public function prepare($sql)
