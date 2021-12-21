@@ -6,7 +6,6 @@ use app\core\UserModel;
 
 class User extends UserModel
 {
-    protected string $id = '';
     public string $username = '';
     public string $email = '';
     public string $password = '';
