@@ -2,6 +2,8 @@
 
 namespace app\core;
 
+use app\core\exceptions\NotFoundException;
+
 class Application
 {
     public static string $ROOT_DIR;
@@ -45,7 +47,12 @@ class Application
     public function run()
     {
         try{
-        echo $this->router->resolve();
+            $path = Application::$app->request;
+            if($path->getFullPath() == '/photo_detail' || $path->getFullPath() == '/gallery_detail')
+            {
+                throw new NotFoundException();
+            }
+            echo $this->router->resolve();
         }
         catch(\Exception $e){
             $this->response->setStatusCode($e->getCode());
@@ -63,30 +70,6 @@ class Application
     public static function isGuest()
     {
         return !self::$app->user;
-    }
-
-    public static function isModerator()
-    {
-        if(self::$app->user['role'] == 'moderator')
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public static function isAdmin()
-    {
-        if(self::$app->user['role'] == 'admin')
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
 
     public function setController(Controller $controller): void

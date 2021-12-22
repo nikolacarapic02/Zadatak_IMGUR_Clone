@@ -15,6 +15,13 @@ class Request
         return substr($path, 0, $position);
     }
 
+    public function getFullPath()
+    {
+        $path = $_SERVER['REQUEST_URI'] ?? '/';
+        $position = strpos($path, '?');
+        return $path;
+    }
+
     public function method()
     {
         return strtolower($_SERVER['REQUEST_METHOD']);

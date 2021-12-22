@@ -20,11 +20,12 @@ $this->title = 'Home';
     </div>
 </div>
 <div class="container-fluid tm-container-content tm-mt-60">
-    <div class="row mb-4">
+    <div class="row mb-1">
         <h2 class="col-6 tm-text-primary">
             Photos
         </h2>
     </div>
+    <hr class="underline">
     <div class="row tm-mb-10 tm-gallery">
     <?php
     $content = new ImageLoad(); 
@@ -33,16 +34,17 @@ $this->title = 'Home';
     </div>
     <div class="row tm-mb-90">
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/photos" class="btn btn-primary tm-btn" id="moreButton">More</a>
+            <a href="http://localhost:8888/photos" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
         </div>            
     </div>
 </div> 
 <div class="container-fluid tm-container-content tm-mt-60">
-    <div class="row mb-4">
+    <div class="row mb-1">
         <h2 class="col-6 tm-text-primary">
             Galleries
         </h2>
     </div>
+    <hr class="underline">
     <div class="row tm-mb-10 tm-gallery">
     <?php
     $content = new GalleryLoad(); 
@@ -51,7 +53,7 @@ $this->title = 'Home';
     </div>
     <div class="row tm-mb-90">
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/galleries" class="btn btn-primary tm-btn" id="moreButton">More</a>
+            <a href="http://localhost:8888/galleries" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
         </div>            
     </div>
 </div> 

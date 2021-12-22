@@ -16,4 +16,28 @@ class UserLoad
     {
         return $this->user;
     }
+
+    public function isModerator()
+    {
+        if($this->user[0]['role'] == 'moderator')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public function isAdmin()
+    {
+        if($this->user[0]['role'] == 'admin')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 }

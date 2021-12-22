@@ -2,6 +2,8 @@
 
 use app\core\page\GalleryLoad;
 
+$this->title = 'Galleries';
+
 $content = new GalleryLoad(); 
 $numOfPages = $content->numOfPages();
 
@@ -28,7 +30,7 @@ else
 
 ?>
 <div class="container-fluid tm-container-content tm-mt-60">
-    <div class="row mb-4">
+    <div class="row mb-2">
         <h2 class="col-6 tm-text-primary">
             Galleries
         </h2>
@@ -38,6 +40,7 @@ else
             </form>
         </div>
     </div>
+    <hr class="underline">
     <div class="row tm-mb-90 tm-gallery">
     <?php
         $content->get();

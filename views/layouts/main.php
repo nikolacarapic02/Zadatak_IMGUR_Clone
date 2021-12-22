@@ -31,7 +31,7 @@ use app\core\Application;
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <i class="fas fa-bars"></i>
         </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link nav-link-1" aria-current="page" href="/">Home</a>
@@ -45,31 +45,32 @@ use app\core\Application;
                 <li class="nav-item">
                     <a class="nav-link nav-link-1" href="/about">About</a>
                 </li>
-                <?php if(Application::isGuest()):?>
-                <ul class="navbar-nav ml-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/login">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/register">Register</a>
-                    </li>
-                </ul>
-                <?php else: ?>
-                <ul class="navbar-nav mb-2 navbar-right">
-                    <li class="nav-item">
-                        <div class="dropdown dropdown-right">
-                            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <?php echo Application::$app->user->getDisplayName(); ?>
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <a class="dropdown-item" href="/profile">Profile</a>
-                                <a class="dropdown-item" href="/logout">Log out</a>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-                <?php endif; ?> 
             </ul>
+            <?php if(Application::isGuest()):?>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-1" aria-current="page" href="/login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-1" aria-current="page" href="/register">Register</a>
+                </li>
+            </ul>
+            <?php else: ?>
+            <ul class="navbar-nav mb-2 ms-auto">
+                <li class="nav-item">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="fas fa-user"></span>
+                            <?php echo Application::$app->user->getDisplayName(); ?>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/profile">Profile</a>
+                            <a class="dropdown-item" href="/logout">Log out</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <?php endif; ?> 
         </div>
     </div>
 </nav>

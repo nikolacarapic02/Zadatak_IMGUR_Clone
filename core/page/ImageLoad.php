@@ -2,7 +2,10 @@
 
 namespace app\core\page;
 
+use Exception;
 use app\core\Application;
+use app\core\exceptions\NotFoundException;
+use app\models\User;
 
 class ImageLoad 
 {
@@ -31,9 +34,47 @@ class ImageLoad
         $this->images = Application::$app->db->getImages($this->page);
         $this->i = 0;
     }
+
+    public function isNsfw($slug)
+    {
+        $image = $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+
+        if($image[0]['nsfw'] == 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public function isHidden($slug)
+    {
+        $image = $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+
+        if($image[0]['hidden'] == 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     
     public function get()
     {
+        if(Application::$app->session->get('user'))
+        {
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
+
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $this->images = Application::$app->db->getAllImages($this->page);
+            }
+        }
+
         while($this->i < count($this->images)){
             $instance = new UserLoad($this->images[$this->i]['user_id']);
             $user = $instance->get();
@@ -63,13 +104,45 @@ class ImageLoad
 
     public function details($slug)
     {
-        $image = Application::$app->db->getSingleImageBySlug($slug);
+        try
+        {
+            if(Application::$app->session->get('user'))
+            {
+                $registeredUser = new UserLoad(Application::$app->session->get('user'));
+
+                if($registeredUser->isModerator() || $registeredUser->isAdmin())
+                {
+                    $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+                }
+                else
+                {
+                    $image = Application::$app->db->getSingleImageBySlug($slug);
+                }
+            }
+            else
+            {
+                $image = Application::$app->db->getSingleImageBySlug($slug);
+            }
+            
+            if(empty($image))
+            {
+                throw new NotFoundException();
+            }
+        }
+        catch(\Exception $e){
+            Application::$app->response->setStatusCode($e->getCode());
+            echo Application::$app->view->renderView('_error',[
+                'exception' => $e
+            ]);
+            exit();
+        }
+
         $instance = new UserLoad($image[0]['user_id']);
         $user = $instance->get();
 
         echo sprintf('
             <div class="container-fluid tm-container-content tm-mt-60">
-                <div class="row tm-mb-90">            
+                <div class="row tm-mb-50">            
                     <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
                         <img src="http://placekitten.com/400/400" alt="%s" class="img-fluid" id="photoDetail">
                     </div>
@@ -80,18 +153,18 @@ class ImageLoad
                                     Download
                                 </a>
                             </div>                    
-                            <div class="mb-4 d-flex flex-wrap">
-                                <div class="mr-4 mb-2">
+                            <div class="mb-4">
+                                <div class="mr-4 mb-2 d-flex flex-wrap">
                                     <span class="tm-text-gray-dark">Format: </span><span class="tm-text-primary">%s</span>
                                 </div>
                                 <div class="mr-4 mb-2">
                                     <span class="tm-text-gray-dark">File name: </span><span class="tm-text-primary">%s</span>
                                 </div>
-                                <div class="mr-4 mb-2">
-                                    <span class="tm-text-gray-dark">Posted by: </span><span class="tm-text-primary">%s</span>
+                                <div class="mr-4 mb-2 d-flex flex-wrap">
+                                    <span class="tm-text-gray-dark">Posted by: </span><a href="/other_profile" class="tm-text">%s</a>
                                 </div>
                             </div>
-                            <div class="mb-4">
+                            <div class="mb-4 text-center">
                                 <h3 class="tm-text-gray-dark mb-3">License</h3>
                                 <p>Free for both personal and commercial use. No need to pay anything. No need to make any attribution.</p>
                             </div>
@@ -110,8 +183,24 @@ class ImageLoad
 
     public function getComments($slug)
     {
-        $image = Application::$app->db->getSingleImageBySlug($slug);
-        $user = Application::$app->user;
+        if(Application::$app->session->get('user'))
+        {
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
+
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+            }
+            else
+            {
+                $image = Application::$app->db->getSingleImageBySlug($slug);
+            }
+        }
+        else
+        {
+            $image = Application::$app->db->getSingleImageBySlug($slug);
+        }
+
         $comments = Application::$app->db->getCommentsForImage($image[0]['id']);
 
         if(count($comments) == 0)
@@ -143,6 +232,7 @@ class ImageLoad
                             </div>
                         </div>
                     </div>
+                    <hr class="underline" id="underlineForm">
                     ',
                     $commentedUser[0]['username'],
                     $comments[$this->i]['comment']
@@ -155,19 +245,86 @@ class ImageLoad
 
     public function createComment($comment ,$slug)
     {
-        if(!empty($comment))
+        $userId = Application::$app->session->get('user');
+        if(Application::$app->session->get('user'))
         {
-            $comment = $_POST['comment'];
-            $userId = Application::$app->session->get('user');
-            $image = Application::$app->db->getSingleImageBySlug($slug);
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
 
-            Application::$app->db->createCommentForImage($userId, $image[0]['id'], $comment);
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+            }
+            else
+            {
+                $image = Application::$app->db->getSingleImageBySlug($slug);
+            }
         }
+        else
+        {
+            $image = Application::$app->db->getSingleImageBySlug($slug);
+        }
+
+        Application::$app->db->createCommentForImage($userId, $image[0]['id'], $comment);
+
+    }
+
+    public function editImageByModerator($nsfw, $hidden , $slug)
+    {
+        $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+        $instance = new UserLoad(Application::$app->session->get('user'));
+        $user = $instance->get();
+
+        if($nsfw == 1 && $hidden == 1)
+        {
+            $action = 'hidden i nsfw';
+        }
+        else
+        {
+            if($nsfw == 1)
+            {
+                $action = 'nsfw';
+            }
+            else
+            {
+                $action = 'hidden';
+            }
+        }
+
+        if($nsfw == '')
+        {
+            $nsfw = $image[0]['nsfw'];
+        }
+        else
+        {
+            if($hidden == '')
+            {
+                $hidden = $image[0]['hidden'];
+            }
+        }
+
+        Application::$app->db->editImageByModerator($nsfw, $hidden, $slug);
+        Application::$app->db->moderatorImageLogging($user[0]['id'], $user[0]['username'], $image[0]['id'], $image[0]['slug'], $action);
     }
 
     public function numOfPages()
     {
-        $instance = Application::$app->db->getNumOfImages();
+        if(Application::$app->session->get('user'))
+        {
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
+
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $instance = Application::$app->db->getNumOfAllImages();
+            }
+            else
+            {
+                $instance = Application::$app->db->getNumOfImages();
+            }
+        }
+        else
+        {
+            $instance = Application::$app->db->getNumOfImages();
+        }
 
         $numImg = $instance[0]['num'];
 
