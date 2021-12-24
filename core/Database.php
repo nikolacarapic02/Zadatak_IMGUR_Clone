@@ -19,7 +19,6 @@ class Database
 
     public function applyMigrations()
     {
-        $this->createMigrationsTable();
         $appliedMigrations = $this->getAppliedMigrations();
 
         $newMigration = [];
@@ -122,8 +121,8 @@ class Database
         {
             $page = 1;
         }
-
         $start = ($page-1) * $limit;
+
         $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
         $statement->execute();
 
@@ -137,8 +136,8 @@ class Database
         {
             $page = 1;
         }
-
         $start = ($page-1) * $limit;
+
         $statement = $this->pdo->prepare("SELECT * FROM gallery LIMIT $start, $limit");
         $statement->execute();
 
@@ -156,6 +155,14 @@ class Database
     public function getSingleGalleryWithoutRule($id)
     {
         $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getGalleryByName($gallery_name)
+    {
+        $statement = $this->pdo->prepare("SELECT id FROM gallery WHERE name = '$gallery_name';");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -203,6 +210,44 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function editGalleryByAdmin($name, $slug, $nsfw, $hidden, $description, $id)
+    {
+        $statement = $this->pdo->prepare("UPDATE gallery SET name = '$name', description = '$description', slug = '$slug', nsfw = '$nsfw', hidden = '$hidden' WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getGalleriesForUser($user_id, $page)
+    {
+        $limit = 8;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+        $start = ($page-1) * $limit;
+
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAllGalleriesForUser($user_id, $page)
+    {
+        $limit = 8;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+        $start = ($page-1) * $limit;
+
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id LIMIT $start, $limit");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     //End Galleries
 
     //Images
@@ -214,8 +259,8 @@ class Database
         {
             $page = 1;
         }
-        
         $start = ($page-1) * $limit;
+
         $statement = $this->pdo->prepare("SELECT * FROM image WHERE nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
         $statement->execute();
 
@@ -229,25 +274,9 @@ class Database
         {
             $page = 1;
         }
-        
         $start = ($page-1) * $limit;
+
         $statement = $this->pdo->prepare("SELECT * FROM image LIMIT $start, $limit");
-        $statement->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function getSingleImageBySlug($slug)
-    {
-        $statement = $this->pdo->prepare("SELECT * FROM image WHERE slug = '$slug' AND nsfw = 0 AND hidden = 0");
-        $statement->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function getSingleImageBySlugWithoutRule($slug)
-    {
-        $statement = $this->pdo->prepare("SELECT * FROM image WHERE slug = '$slug'");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -269,6 +298,14 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getSingleImageBySlugWithoutRule($slug)
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE slug = '$slug'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function getNumOfImages()
     {
         $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM image WHERE nsfw = 0 AND hidden = 0");
@@ -285,9 +322,47 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function editImageByModerator($nsfw, $hidden, $slug)
+    public function editImageByModerator($nsfw, $hidden, $id)
     {
-        $statement = $this->pdo->prepare("UPDATE image SET nsfw = '$nsfw', hidden = '$hidden' WHERE slug = '$slug'");
+        $statement = $this->pdo->prepare("UPDATE image SET nsfw = '$nsfw', hidden = '$hidden' WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function editImageByAdmin($file_name, $newSlug, $nsfw, $hidden, $id)
+    {
+        $statement = $this->pdo->prepare("UPDATE image SET file_name = '$file_name', slug = '$newSlug', nsfw = '$nsfw', hidden = '$hidden' WHERE id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getImagesForUser($user_id, $page)
+    {
+        $limit = 8;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+        $start = ($page-1) * $limit;
+
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAllImagesForUser($user_id, $page)
+    {
+        $limit = 8;
+        if(empty($page))
+        {
+            $page = 1;
+        }
+        $start = ($page-1) * $limit;
+
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -338,14 +413,14 @@ class Database
     public function moderatorImageLogging($user_id, $username, $id, $name, $action)
     {
         $statement = $this->pdo->prepare("INSERT INTO moderator_logging (moderator_id, image_id, action)
-        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio sliku ','$name', ' - http://localhost:8888/photo_detail?name=', '$name', ' da je ', '$action'));");
+        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio sliku ','$name', ' - http://localhost:8888/photo_detail?id=', '$id', ' da ', '$action'));");
         $statement->execute();
     }
 
     public function moderatorGalleryLogging($user_id, $username, $id, $name, $action)
     {
-        $statement = $this->pdo->prepare("INSERT INTO moderator_logging (moderator_id, image_id, action)
-        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio galeriju ','$name', ' - http://localhost:8888/gallery_detail?id=', '$id', ' da je ', '$action'));");
+        $statement = $this->pdo->prepare("INSERT INTO moderator_logging (moderator_id, gallery_id, action)
+        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio galeriju ','$name', ' - http://localhost:8888/gallery_detail?id=', '$id', ' da ', '$action'));");
         $statement->execute();
     }
 

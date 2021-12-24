@@ -2,67 +2,161 @@
 
 use app\core\form\Form;
 use app\core\Application;
-use app\core\page\ImageLoad;
 use app\core\page\UserLoad;
+use app\core\page\ImageLoad;
+use app\core\exceptions\NotFoundException;
 
 $this->title = 'Photo Details';
 $this->view = 'photo_detail';
 
-if(!empty($_POST['comment']))
+$content = new ImageLoad();
+
+if(!key_exists('id', $_GET) || !is_numeric($_GET['id']))
 {
-    $content->createComment($_POST['comment'], $_GET['name']);
+    throw new NotFoundException();
 }
 
-if(!empty($_POST['nsfw']) && !empty($_POST['hidden']))
+if(!empty($_POST['comment']))
 {
-    $content->editImageByModerator($_POST['nsfw'], $_POST['hidden'], $_GET['name']);
-}
-else
-{
-    if(!empty($_POST['nsfw']))
-    {
-        $content->editImageByModerator($_POST['nsfw'], '', $_GET['name']);
-    }
-    else
-    {
-        if(!empty($_POST['hidden']))
-        {
-            $content->editImageByModerator('', $_POST['hidden'], $_GET['name']);
-        }
-    }
+    $content->createComment($_POST['comment'], $_GET['id']);
 }
 
 if(Application::$app->session->get('user'))
 {
     $user = new UserLoad(Application::$app->session->get('user'));
+
+    if($user->isModerator())
+    {
+        if(!empty($_POST['nsfw']) && !empty($_POST['hidden']))
+        {
+            $content->editImageByModerator($_POST['nsfw'], $_POST['hidden'], $_GET['id']);
+        }
+        else
+        {
+            if(!empty($_POST['nsfw']))
+            {
+                $content->editImageByModerator($_POST['nsfw'], '', $_GET['id']);
+            }
+        
+            if(!empty($_POST['hidden']))
+            {
+                $content->editImageByModerator('', $_POST['hidden'], $_GET['id']);
+            }
+
+            if(empty($_POST['nsfw']) && empty($_POST['hidden']))
+            {
+                $content->editImageByModerator('', '', $_GET['id']);
+            }
+        }
+    }
+
+    if($user->isAdmin())
+    {
+        if(!empty($_POST['file_name']) && !empty($_POST['slug']) && !empty($_POST['nsfw']) && !empty($_POST['hidden']))
+        {
+            $content->editImageByAdmin($_POST['file_name'], $_POST['slug'], $_POST['nsfw'], $_POST['hidden'], $_GET['id']);
+        }
+        else
+        {
+            if(!empty($_POST['file_name']))
+            {
+                $fileName = $_POST['file_name'];
+            }
+            else
+            {
+                $fileName = '';
+            }
+        
+            if(!empty($_POST['slug']))
+            {
+                $slug = $_POST['slug'];
+            }
+            else
+            {
+                $slug = '';
+            }
+        
+            if(!empty($_POST['nsfw']))
+            {
+                $nsfw = $_POST['nsfw'];
+            }
+            else
+            {
+                $nsfw = '';
+            }
+        
+            if(!empty($_POST['hidden']))
+            {
+                $hidden = $_POST['hidden'];
+            }
+            else
+            {
+                $hidden = '';
+            }
+        
+            $content->editImageByAdmin($fileName, $slug, $nsfw, $hidden, $_GET['id']);
+        }
+    }
 }
 
-$content = new ImageLoad();
 
-$content->details($_GET['name']);
+$content->details($_GET['id']);
 
 ?>
 <div class="container-fluid tm-container-content"> 
     <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
-        <?php if(!Application::isGuest()){ echo '<button type="button" class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample" id="editButton">Edit <span class="fas fa-edit"></span></button>'; }?> 
-        <div class="collapse mt-2" id="collapseExample">
-            <?php $form = Form::begin('','post')?>
-                <div class="btn-group" data-toggle="buttons">
+        <?php if(!Application::isGuest()): ?>
+            <?php if($user->isModerator()): ?>
+                <button type="button" class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample1" id="editButton">Edit <span class="fas fa-edit"></span></button>
+                <div class="collapse mt-2" id="collapseExample1">
+                    <?php $form = Form::begin('','post')?>
+                        <div class="btn-group" data-toggle="buttons">
 
-                    <label class="btn  form-check-label">
-                        <input type="checkbox"  autocomplete="off" name="nsfw" value="1" <?php if($content->isNsfw($_GET['name'])){ echo 'checked'; } ?>> NSFW
-                    </label>
+                            <label class="btn  form-check-label">
+                                <input type="checkbox"  autocomplete="off" name="nsfw" value="1" <?php if($content->isNsfw($_GET['id'])){ echo 'checked'; } ?>> <span class="checkText">NSFW</span>
+                            </label>
 
-                    <label class="btn form-check-label">
-                        <input type="checkbox"  autocomplete="off" name="hidden" value="1" <?php if($content->isNsfw($_GET['name'])){ echo 'checked'; } ?>> Hidden
-                    </label>
+                            <label class="btn form-check-label">
+                                <input type="checkbox"  autocomplete="off" name="hidden" value="1" <?php if($content->isHidden($_GET['id'])){ echo 'checked'; } ?>> <span class="checkText">Hidden</span>
+                            </label>
 
+                        </div>
+                        <div class="form-group tm-text-right">
+                            <button type="submit" class="btn btn-primary">Done</button>
+                        </div>
+                    <?php Form::end() ?>
                 </div>
-                <div class="form-group tm-text-right">
-                    <button type="submit" class="btn btn-primary">Done</button>
+            <?php endif; ?>
+            <?php if($user->isAdmin()): ?>
+                <button type="button" class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample2" aria-expanded="false" aria-controls="collapseExample2" id="editButton">Edit <span class="fas fa-edit"></span></button>
+                <div class="collapse mt-2" id="collapseExample2">
+                    <?php $form = Form::begin('', 'post') ?>
+                        <div class="form-group">
+                            <input type="text" name="file_name" class="form-control rounded-0" placeholder="Name"/>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="slug" class="form-control rounded-0" placeholder="Slug"/>
+                        </div>
+                        <div class="form-group">
+                        <div class="btn-group" data-toggle="buttons">
+
+                            <label class="btn  form-check-label">
+                                <input type="checkbox"  autocomplete="off" name="nsfw" value="1" <?php if($content->isNsfw($_GET['id'])){ echo 'checked'; } ?>> <span class="checkText">NSFW</span>
+                            </label>
+
+                            <label class="btn form-check-label">
+                                <input type="checkbox"  autocomplete="off" name="hidden" value="1" <?php if($content->isHidden($_GET['id'])){ echo 'checked'; } ?>> <span class="checkText">Hidden</span>
+                            </label>
+
+                        </div>
+                        </div>
+                        <div class="form-group tm-text-right">
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </div>
+                    <?php Form::end() ?> 
                 </div>
-            <?php Form::end() ?>
-        </div>
+            <?php endif; ?> 
+        <?php endif; ?>
     </div>
 </div> 
 </div>
@@ -74,7 +168,7 @@ $content->details($_GET['name']);
     </div>
     <div class="d-flex justify-content-center row">
         <div class="col-md-8">
-            <?php $content->getComments($_GET['name']);?>
+            <?php $content->getComments($_GET['id']);?>
             <div class="bg-light p-2">
                 <?php $form = Form::begin('', 'post') ?>
                     <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src="assets/img/user.png" width="40">

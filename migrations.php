@@ -18,5 +18,15 @@ $config = [
 
 $app = new Application(__DIR__, $config);
 
-$app->db->dropMigrations();
-$app->db->applyMigrations();
+$app->db->createMigrationsTable();
+
+if(empty($app->db->getAppliedMigrations()))
+{
+    $app->db->applyMigrations();
+}
+else
+{
+    $app->db->dropMigrations();
+    $app->db->applyMigrations();
+}
+

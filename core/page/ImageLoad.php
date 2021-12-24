@@ -2,17 +2,15 @@
 
 namespace app\core\page;
 
-use Exception;
 use app\core\Application;
 use app\core\exceptions\NotFoundException;
-use app\models\User;
 
 class ImageLoad 
 {
     public array $images = [];
     public int $i = 0;
     public string $page = '';
-
+    
     public function __construct()
     {
         if(key_exists('page',$_GET))
@@ -35,9 +33,9 @@ class ImageLoad
         $this->i = 0;
     }
 
-    public function isNsfw($slug)
+    public function isNsfw($id)
     {
-        $image = $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+        $image = $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
 
         if($image[0]['nsfw'] == 1)
         {
@@ -49,9 +47,9 @@ class ImageLoad
         }
     }
 
-    public function isHidden($slug)
+    public function isHidden($id)
     {
-        $image = $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+        $image = $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
 
         if($image[0]['hidden'] == 1)
         {
@@ -81,10 +79,10 @@ class ImageLoad
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-5">
                     <figure class="effect-ming tm-video-item">
-                        <img src="http://placekitten.com/400/400" alt="Image" class="img-fluid">
+                        <img src="%s" alt="Image" class="img-fluid">
                         <figcaption class="d-flex align-items-center justify-content-center">
                             <h2>Details</h2>
-                            <a href="/photo_detail?name=%s">View more</a>
+                            <a href="/photo_detail?id=%s">View more</a>
                         </figcaption>                    
                     </figure>
                     <div class="d-flex justify-content-between tm-text-gray">
@@ -93,7 +91,8 @@ class ImageLoad
                     </div>
                 </div>        
                 ',
-                $this->images[$this->i]['slug'],
+                $this->images[$this->i]['file_name'],
+                $this->images[$this->i]['id'],
                 $this->images[$this->i]['slug'],
                 $user[0]['username']
             );
@@ -102,39 +101,29 @@ class ImageLoad
         }
     }
 
-    public function details($slug)
+    public function details($id)
     {
-        try
+        if(Application::$app->session->get('user'))
         {
-            if(Application::$app->session->get('user'))
-            {
-                $registeredUser = new UserLoad(Application::$app->session->get('user'));
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
 
-                if($registeredUser->isModerator() || $registeredUser->isAdmin())
-                {
-                    $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
-                }
-                else
-                {
-                    $image = Application::$app->db->getSingleImageBySlug($slug);
-                }
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
             }
             else
             {
-                $image = Application::$app->db->getSingleImageBySlug($slug);
-            }
-            
-            if(empty($image))
-            {
-                throw new NotFoundException();
+                $image = Application::$app->db->getSingleImageById($id);
             }
         }
-        catch(\Exception $e){
-            Application::$app->response->setStatusCode($e->getCode());
-            echo Application::$app->view->renderView('_error',[
-                'exception' => $e
-            ]);
-            exit();
+        else
+        {
+            $image = Application::$app->db->getSingleImageById($id);
+        }
+            
+        if(empty($image))
+        {
+            throw new NotFoundException();
         }
 
         $instance = new UserLoad($image[0]['user_id']);
@@ -144,24 +133,21 @@ class ImageLoad
             <div class="container-fluid tm-container-content tm-mt-60">
                 <div class="row tm-mb-50">            
                     <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
-                        <img src="http://placekitten.com/400/400" alt="%s" class="img-fluid" id="photoDetail">
+                        <img src="%s" alt="%s" class="img-fluid" id="photoDetail">
                     </div>
                     <div class="col-xl-4 col-lg-5 col-md-6 col-sm-12">
                         <div class="tm-bg-gray tm-video-details">
                             <div class="text-center mb-5">
-                                <a href="/photo_detail?name=%s" class="btn btn-primary tm-btn-big">
-                                    Download
+                                <a href="/photo_detail?id=%s" class="btn btn-primary tm-btn-big">
+                                    <span class="fas fa-download"></span>  Download
                                 </a>
                             </div>                    
                             <div class="mb-4">
-                                <div class="mr-4 mb-2 d-flex flex-wrap">
-                                    <span class="tm-text-gray-dark">Format: </span><span class="tm-text-primary">%s</span>
-                                </div>
-                                <div class="mr-4 mb-2">
+                                <div class="mr-4 mb-2" id="Details">
                                     <span class="tm-text-gray-dark">File name: </span><span class="tm-text-primary">%s</span>
                                 </div>
-                                <div class="mr-4 mb-2 d-flex flex-wrap">
-                                    <span class="tm-text-gray-dark">Posted by: </span><a href="/other_profile" class="tm-text">%s</a>
+                                <div class="mr-4 mb-2 d-flex flex-wrap" id="Details">
+                                    <span class="tm-text-gray-dark">Posted by: </span><a href="/other_profile" class="tm-text"><span class="ms-2">%s</span></a>
                                 </div>
                             </div>
                             <div class="mb-4 text-center">
@@ -173,15 +159,15 @@ class ImageLoad
                 </div>
             </div> 
         ',
+        $image[0]['file_name'],
         $image[0]['slug'],
         $image[0]['slug'],
-        strtoupper(substr($image[0]['file_name'], strpos($image[0]['file_name'], ".") + 1)),
         $image[0]['slug'],
         $user[0]['username']
         );
     }
 
-    public function getComments($slug)
+    public function getComments($id)
     {
         if(Application::$app->session->get('user'))
         {
@@ -189,16 +175,21 @@ class ImageLoad
 
             if($registeredUser->isModerator() || $registeredUser->isAdmin())
             {
-                $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
             }
             else
             {
-                $image = Application::$app->db->getSingleImageBySlug($slug);
+                $image = Application::$app->db->getSingleImageById($id);
             }
         }
         else
         {
-            $image = Application::$app->db->getSingleImageBySlug($slug);
+            $image = Application::$app->db->getSingleImageById($id);
+        }
+
+        if(empty($image))
+        {
+            throw new NotFoundException();
         }
 
         $comments = Application::$app->db->getCommentsForImage($image[0]['id']);
@@ -243,67 +234,131 @@ class ImageLoad
         }
     }
 
-    public function createComment($comment ,$slug)
+    public function createComment($comment ,$id)
     {
         $userId = Application::$app->session->get('user');
+
         if(Application::$app->session->get('user'))
         {
             $registeredUser = new UserLoad(Application::$app->session->get('user'));
 
             if($registeredUser->isModerator() || $registeredUser->isAdmin())
             {
-                $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
             }
             else
             {
-                $image = Application::$app->db->getSingleImageBySlug($slug);
+                $image = Application::$app->db->getSingleImageById($id);
             }
         }
         else
         {
-            $image = Application::$app->db->getSingleImageBySlug($slug);
+            $image = Application::$app->db->getSingleImageById($id);
+        }
+
+        if(empty($image))
+        {
+            throw new NotFoundException();
         }
 
         Application::$app->db->createCommentForImage($userId, $image[0]['id'], $comment);
-
     }
 
-    public function editImageByModerator($nsfw, $hidden , $slug)
+    public function editImageByModerator($nsfw, $hidden , $id)
     {
-        $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+        $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
+
+        if(empty($image))
+        {
+            throw new NotFoundException();
+        }
+
         $instance = new UserLoad(Application::$app->session->get('user'));
         $user = $instance->get();
 
+        $nsfwOld = $image[0]['nsfw'];
+        $hiddenOld = $image[0]['hidden'];
+
+        if($nsfw == '')
+        {
+            $nsfw = 0;
+        }
+
+        if($hidden == '')
+        {
+            $hidden = 0;
+        }
+
         if($nsfw == 1 && $hidden == 1)
         {
-            $action = 'hidden i nsfw';
+            $action = 'je hidden i nsfw';
         }
         else
         {
-            if($nsfw == 1)
+            if($nsfw == 1 && $nsfw != $nsfwOld)
             {
-                $action = 'nsfw';
+                $action = 'je nsfw';
             }
-            else
+
+            if($hidden == 1 && $hidden != $hiddenOld)
             {
-                $action = 'hidden';
+                $action = 'je hidden';
             }
+
+            if($nsfw == 0 && $nsfw != $nsfwOld)
+            {
+                $action = 'vise nije nsfw';
+            }
+
+            if($hidden == 0 && $hidden != $hiddenOld)
+            {
+                $action = 'vise nije hidden';
+            }
+        }
+
+        Application::$app->db->editImageByModerator($nsfw, $hidden, $id);
+
+        $newImage = Application::$app->db->getSingleImageByIdWithoutRule($id);
+
+        $nsfwNew = $newImage[0]['nsfw'];
+        $hiddenNew = $newImage[0]['hidden'];
+
+        if($nsfwOld != $nsfwNew || $hiddenOld != $hiddenNew)
+        {
+            Application::$app->db->moderatorImageLogging($user[0]['id'], $user[0]['username'], $image[0]['id'], $image[0]['slug'], $action);
+        }
+    }
+
+    public function editImageByAdmin($file_name, $slug, $nsfw, $hidden, $id)
+    {
+        $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
+
+        if(empty($image))
+        {
+            throw new NotFoundException();
+        }
+
+        if($file_name == '')
+        {
+            $file_name = $image[0]['file_name'];
+        }
+
+        if($slug == '')
+        {
+            $slug = $image[0]['slug'];
         }
 
         if($nsfw == '')
         {
-            $nsfw = $image[0]['nsfw'];
+            $nsfw = 0;
         }
-        else
+   
+        if($hidden == '')
         {
-            if($hidden == '')
-            {
-                $hidden = $image[0]['hidden'];
-            }
+            $hidden = 0;
         }
 
-        Application::$app->db->editImageByModerator($nsfw, $hidden, $slug);
-        Application::$app->db->moderatorImageLogging($user[0]['id'], $user[0]['username'], $image[0]['id'], $image[0]['slug'], $action);
+        Application::$app->db->editImageByAdmin($file_name, $slug, $nsfw, $hidden, $id);
     }
 
     public function numOfPages()
@@ -330,4 +385,84 @@ class ImageLoad
 
         return ceil($numImg/16);
     }
+
+    public function imagesForUser()
+    {
+        $this->i = 0;
+        $registeredUser = new UserLoad(Application::$app->session->get('user'));
+        $user = $registeredUser->get();
+
+        if($registeredUser->isModerator() || $registeredUser->isAdmin())
+        {
+            $images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
+        }
+        else
+        {
+            $images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
+        }
+
+        echo sprintf('
+            <div class="container-fluid tm-container-content tm-mt-30">
+                <div class="row mb-4">
+                    <h2 class="tm-text-primary ">
+                        Your Photos
+                    </h2>
+                </div>
+                <hr class="underline">
+            </div>
+            '
+        );
+
+        if(empty($images))
+        {
+
+            echo sprintf('
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
+                        <p class="comment-text">There is no images</p>
+                    </div>     
+                    <div class="row tm-mb-90">
+                        <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+                            <a href="/" class="btn btn-primary tm-btn disabled" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+                        </div>            
+                    </div>     
+                '
+            );
+        }
+        else
+        {
+            while($this->i < count($images))
+            {
+            echo sprintf('
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
+                        <figure class="effect-ming tm-video-item">
+                            <img src="%s" alt="Image" class="img-fluid">
+                            <figcaption class="d-flex align-items-center justify-content-center">
+                                <h2>Details</h2>
+                                <a href="/photo_detail?id=%s">View more</a>
+                            </figcaption>                    
+                        </figure>
+                        <div class="d-flex justify-content-between tm-text-gray">
+                            <span class="tm-text-gray-light">%s</span>
+                        </div>
+                    </div>         
+                ',
+                $images[$this->i]['file_name'],
+                $images[$this->i]['id'],
+                $images[$this->i]['slug'],
+            );
+
+            $this->i++;
+            }
+
+            echo sprintf('
+                <div class="row tm-mb-90">
+                    <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+                        <a href="/" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+                    </div>            
+                </div>  
+            '
+            );
+        }
+    }
+
 }

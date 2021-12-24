@@ -92,7 +92,7 @@ class GalleryLoad
                 </div>        
                 ',
                 $this->galleries[$this->i]['id'],
-                $this->galleries[$this->i]['slug'],
+                $this->galleries[$this->i]['name'],
                 $user[0]['username']
             );
 
@@ -102,42 +102,32 @@ class GalleryLoad
 
     public function details($id)
     {
-        try
+        if(Application::$app->session->get('user'))
         {
-            if(Application::$app->session->get('user'))
-            {
-                $registeredUser = new UserLoad(Application::$app->session->get('user'));
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
 
-                if($registeredUser->isModerator() || $registeredUser->isAdmin())
-                {
-                    $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
-                    $imagesId = Application::$app->db->getAllImagesFromGallery($id);
-                }
-                else
-                {
-                    $gallery = Application::$app->db->getSingleGallery($id);
-                    $imagesId = Application::$app->db->getImagesFromGallery($id);
-                }
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+                $imagesId = Application::$app->db->getAllImagesFromGallery($id);
             }
             else
             {
                 $gallery = Application::$app->db->getSingleGallery($id);
                 $imagesId = Application::$app->db->getImagesFromGallery($id);
             }
+        }
+        else
+        {
+            $gallery = Application::$app->db->getSingleGallery($id);
+            $imagesId = Application::$app->db->getImagesFromGallery($id);
+        }
 
-            if(empty($gallery))
-            {
-                throw new NotFoundException();
-            }
+        if(empty($gallery))
+        {
+            throw new NotFoundException();
         }
-        catch(\Exception $e){
-            Application::$app->response->setStatusCode($e->getCode());
-            echo Application::$app->view->renderView('_error',[
-                'exception' => $e
-            ]);
-            exit();
-        }
-        
+    
         $this->i = 0;
 
         $instance = new UserLoad($gallery[0]['user_id']);
@@ -146,19 +136,19 @@ class GalleryLoad
         echo sprintf('
             <div class="container-fluid tm-container-content tm-mt-40">
                 <div class="row tm-mb-40">  
-                    <div class="col-xl-1 col-lg-7 col-md-6 col-sm-12">
+                    <div class="col-xl-1 col-lg-1 col-md-1">
                     </div>  
-                    <div class="col-xl-10 col-lg-5 col-md-6 col-sm-12 mb-5 mt-5">
+                    <div class="col-xl-10 col-lg-10 col-md-10 col-sm-12 mb-5 mt-5">
                         <div class="tm-bg-gray tm-video-details mb-5">                  
                             <div class="mb-4">
-                                <div class="mr-4 mb-2 d-flex flex-wrap">
-                                    <span class="tm-text-gray-dark" style="font-size: 1.6rem">Gallery name: </span><span class="tm-text-primary" style="font-size: 1.6rem">%s</span>
+                                <div class="mr-4 mb-2 d-flex flex-wrap" id="Details">
+                                    <span class="tm-text-gray-dark" >Gallery name: </span><span class="tm-text-primary ms-2">%s</span>
                                 </div>
-                                <div class="mr-4 mb-2 d-flex flex-wrap">
-                                    <span class="tm-text-gray-dark" style="font-size: 1.6rem">Created by: </span><a href="/other_profile" class="tm-text" style="font-size: 1.6rem">%s</a>
+                                <div class="mr-4 mb-2 d-flex flex-wrap" id="Details">
+                                    <span class="tm-text-gray-dark" >Created by: </span><a href="/other_profile" class="tm-text"><span class="ms-2">%s</span></a>
                                 </div>
-                                <div class="mr-4 mb-4">
-                                    <span class="tm-text-gray-dark" style="font-size: 1.6rem">Description: </span><span class="tm-text-primary" style="font-size: 1.6rem" >%s</span>
+                                <div class="mr-4 mb-4" id="Details">
+                                    <span class="tm-text-gray-dark">Description: </span><span class="tm-text-primary">%s</span>
                                 </div>
                             </div>
                             <div class="text-center">
@@ -176,7 +166,7 @@ class GalleryLoad
                 <hr class="underline">
             </div>
         ',
-            $gallery[0]['slug'],
+            $gallery[0]['name'],
             $user[0]['username'],
             $gallery[0]['description'],
             $gallery[0]['slug']
@@ -202,13 +192,18 @@ class GalleryLoad
                 $image = Application::$app->db->getSingleImageById($imagesId[$this->i]['image_id']);
             }
 
+            if(empty($gallery))
+            {
+                throw new NotFoundException();
+            }
+
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
                     <figure class="effect-ming tm-video-item">
-                        <img src="http://placekitten.com/400/400" alt="Image" class="img-fluid">
+                        <img src="%s" alt="Image" class="img-fluid">
                         <figcaption class="d-flex align-items-center justify-content-center">
                             <h2>Details</h2>
-                            <a href="/photo_detail?name=%s">View more</a>
+                            <a href="/photo_detail?id=%s">View more</a>
                         </figcaption>                    
                     </figure>
                     <div class="d-flex justify-content-between tm-text-gray">
@@ -216,7 +211,8 @@ class GalleryLoad
                     </div>
                 </div>          
                 ',
-                $image[0]['slug'],
+                $image[0]['file_name'],
+                $image[0]['id'],
                 $image[0]['slug'],
             );
 
@@ -243,6 +239,11 @@ class GalleryLoad
         else
         {
             $gallery = Application::$app->db->getSingleGallery($id);
+        }
+
+        if(empty($gallery))
+        {
+            throw new NotFoundException();
         }
 
         $comments = Application::$app->db->getCommentsForGallery($gallery[0]['id']);
@@ -289,6 +290,29 @@ class GalleryLoad
 
     public function createComment($comment ,$id)
     {
+        if(Application::$app->session->get('user'))
+        {
+            $registeredUser = new UserLoad(Application::$app->session->get('user'));
+
+            if($registeredUser->isModerator() || $registeredUser->isAdmin())
+            {
+                $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+            }
+            else
+            {
+                $gallery = Application::$app->db->getSingleGallery($id);
+            }
+        }
+        else
+        {
+            $gallery = Application::$app->db->getSingleGallery($id);
+        }
+
+        if(empty($gallery))
+        {
+            throw new NotFoundException();
+        }
+
         if(!empty($comment))
         {
             $comment = $_POST['comment'];
@@ -311,8 +335,27 @@ class GalleryLoad
     public function editGalleryByModerator($nsfw, $hidden , $id)
     {
         $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+
+        if(empty($gallery))
+        {
+            throw new NotFoundException();
+        }
+
         $instance = new UserLoad(Application::$app->session->get('user'));
         $user = $instance->get();
+
+        $nsfwOld = $gallery[0]['nsfw'];
+        $hiddenOld = $gallery[0]['hidden'];
+
+        if($nsfw == '')
+        {
+            $nsfw = 0;
+        }
+
+        if($hidden == '')
+        {
+            $hidden = 0;
+        }
 
         if($nsfw == 1 && $hidden == 1)
         {
@@ -320,30 +363,75 @@ class GalleryLoad
         }
         else
         {
-            if($nsfw == 1)
+            if($nsfw == 1 && $nsfw != $nsfwOld)
             {
-                $action = 'nsfw';
+                $action = 'je nsfw';
             }
-            else
-            {
-                $action = 'hidden';
-            }
-        }
 
-        if($nsfw == '')
-        {
-            $nsfw = $gallery[0]['nsfw'];
-        }
-        else
-        {
-            if($hidden == '')
+            if($hidden == 1 && $hidden != $hiddenOld)
             {
-                $hidden = $gallery[0]['hidden'];
+                $action = 'je hidden';
+            }
+
+            if($nsfw == 0 && $nsfw != $nsfwOld)
+            {
+                $action = 'vise nije nsfw';
+            }
+
+            if($hidden == 0 && $hidden != $hiddenOld)
+            {
+                $action = 'vise nije hidden';
             }
         }
 
         Application::$app->db->editGalleryByModerator($nsfw, $hidden, $id);
-        Application::$app->db->moderatorGalleryLogging($user[0]['id'], $user[0]['username'], $gallery[0]['id'], $gallery[0]['slug'], $action);
+
+        $newGallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+
+        $nsfwNew = $newGallery[0]['nsfw'];
+        $hiddenNew = $newGallery[0]['hidden'];
+
+        if($nsfwOld != $nsfwNew || $hiddenOld != $hiddenNew)
+        {
+            Application::$app->db->moderatorGalleryLogging($user[0]['id'], $user[0]['username'], $gallery[0]['id'], $gallery[0]['slug'], $action);
+        }
+    }
+
+    public function editGalleryByAdmin($name, $slug, $nsfw, $hidden, $description, $id)
+    {
+        $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+
+        if(empty($gallery))
+        {
+            throw new NotFoundException();
+        }
+
+        if($name == '')
+        {
+            $name = $gallery[0]['name'];
+        }
+
+        if($description == '')
+        {
+            $description = $gallery[0]['description'];
+        }
+
+        if($slug == '')
+        {
+            $slug = $gallery[0]['slug'];
+        }
+
+        if($nsfw == '')
+        {
+            $nsfw = 0;
+        }
+   
+        if($hidden == '')
+        {
+            $hidden = 0;
+        }
+
+        Application::$app->db->editGalleryByAdmin($name, $slug, $nsfw, $hidden, $description, $id);
     }
 
     public function numOfPages()
@@ -369,6 +457,84 @@ class GalleryLoad
         $numGall = $instance[0]['num'];
 
         return ceil($numGall/16);
+    }
+
+    public function galleriesOfUser()
+    {
+        $this->i = 0;
+        $registeredUser = new UserLoad(Application::$app->session->get('user'));
+        $user = $registeredUser->get();
+
+        if($registeredUser->isModerator() || $registeredUser->isAdmin())
+        {
+            $galleries = Application::$app->db->getAllGalleriesForUser($user[0]['id'], $this->page);
+        }
+        else
+        {
+            $galleries = Application::$app->db->getGalleriesForUser($user[0]['id'], $this->page);
+        }
+
+        echo sprintf('
+            <div class="container-fluid tm-container-content tm-mt-30">
+                <div class="row mb-4">
+                    <h2 class="tm-text-primary ">
+                        Your Galleries
+                    </h2>
+                </div>
+                <hr class="underline">
+            </div>
+            '
+        );
+
+        if(empty($galleries))
+        {
+
+            echo sprintf('
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
+                        <p class="comment-text">There is no galleries</p>
+                    </div>     
+                    <div class="row tm-mb-90">
+                        <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+                            <a href="/" class="btn btn-primary tm-btn disabled" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+                        </div>            
+                    </div>     
+                '
+            );
+        }
+        else
+        {
+            while($this->i < count($galleries))
+            {
+                echo sprintf('
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
+                            <figure class="effect-ming tm-video-item">
+                                <img src="assets/img/gallery.jpg" alt="Gallery" class="img-fluid">
+                                <figcaption class="d-flex align-items-center justify-content-center">
+                                    <h2>Details</h2>
+                                    <a href="/gallery_detail?id=%s">View more</a>
+                                </figcaption>                    
+                            </figure>
+                            <div class="d-flex justify-content-between tm-text-gray">
+                                <span class="tm-text-gray-light">%s</span>
+                            </div>
+                        </div>         
+                    ',
+                    $galleries[$this->i]['id'],
+                    $galleries[$this->i]['slug'],
+                );
+
+                $this->i++;
+            }
+
+            echo sprintf('
+                <div class="row tm-mb-90">
+                    <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+                        <a href="/" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+                    </div>            
+                </div>  
+            '
+            );
+        }
     }
 
 }

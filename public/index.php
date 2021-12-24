@@ -28,6 +28,7 @@ $app->router->get('/register', [AuthController::class, 'register']);
 $app->router->post('/register', [AuthController::class, 'register']);
 $app->router->get('/logout', [AuthController::class, 'logout']);
 $app->router->get('/profile', [AuthController::class, 'profile']);
+$app->router->post('/profile', [AuthController::class, 'profile']);
 $app->router->get('/photos', [SiteController::class, 'photos']);
 $app->router->get('/photo_detail', [SiteController::class, 'photo_detail']);
 $app->router->post('/photo_detail', [SiteController::class, 'photo_detail']);

@@ -34,7 +34,7 @@ $this->title = 'Home';
     </div>
     <div class="row tm-mb-90">
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/photos" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+            <a href="/photos" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
         </div>            
     </div>
 </div> 
@@ -53,7 +53,7 @@ $this->title = 'Home';
     </div>
     <div class="row tm-mb-90">
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/galleries" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
+            <a href="/galleries" class="btn btn-primary tm-btn" id="moreButton"><span class="fas fa-plus"></span>  More</a>
         </div>            
     </div>
 </div> 
