@@ -7,8 +7,10 @@ use app\core\Request;
 use app\core\Response;
 use app\core\Controller;
 use app\core\Application;
-use app\core\middlewares\AuthMiddleware;
 use app\models\LoginForm;
+use app\models\CreateImage;
+use app\models\CreateGallery;
+use app\core\middlewares\AuthMiddleware;
 
 class AuthController extends Controller
 {

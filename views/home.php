@@ -1,6 +1,6 @@
 <?php
-use app\core\page\GalleryLoad;
-use app\core\page\ImageLoad;
+use app\core\page\PageGallery;
+use app\core\page\PageImage;
 
 $this->title = 'Home';
 ?>
@@ -28,7 +28,7 @@ $this->title = 'Home';
     <hr class="underline">
     <div class="row tm-mb-10 tm-gallery">
     <?php
-    $content = new ImageLoad(); 
+    $content = new PageImage(); 
     $content->get();
     ?>
     </div>
@@ -47,7 +47,7 @@ $this->title = 'Home';
     <hr class="underline">
     <div class="row tm-mb-10 tm-gallery">
     <?php
-    $content = new GalleryLoad(); 
+    $content = new PageGallery(); 
     $content->get();
     ?>
     </div>

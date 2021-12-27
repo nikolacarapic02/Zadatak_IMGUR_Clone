@@ -41,14 +41,29 @@ a:hover { color:#009999; }
     pointer-events: none;
 }
 
-#buttonPreNext
+a:disabled
 {
-    width: 15%;
+    pointer-events: none;
+}
+
+.tm-btn-prev
+{
+    width: 200px;
+}
+
+.tm-btn-next
+{
+    width: 200px;
 }
 
 #moreButton
 {
     width: 100%;;
+}
+
+#moreButtonProfile
+{
+    width: 110%;
 }
 
 #editButton

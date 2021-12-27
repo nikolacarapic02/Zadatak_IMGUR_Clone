@@ -138,7 +138,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM gallery LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery ORDER BY id LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -202,6 +202,22 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getNumOfYourGalleries($user_id)
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM gallery WHERE user_id = '$user_id' AND nsfw = 0 AND hidden = 0");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getNumOfYourAllGalleries($user_id)
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM gallery WHERE user_id = '$user_id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function editGalleryByModerator($nsfw, $hidden, $id)
     {
         $statement = $this->pdo->prepare("UPDATE gallery SET nsfw = '$nsfw', hidden = '$hidden' WHERE id = '$id'");
@@ -247,6 +263,39 @@ class Database
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
+    
+    public function createGallery($name, $slug, $description, $user_id)
+    {
+        $statement = $this->pdo->prepare("INSERT INTO gallery (user_id, name, description, slug)
+        VALUES ('$user_id', '$name', '$description', '$slug');");
+        $statement->execute();
+
+    }
+
+    public function editGallery($name, $slug, $description, $id, $user_id)
+    {
+        $statement = $this->pdo->prepare("UPDATE gallery SET name = '$name', slug = '$slug', description = '$description' WHERE id = '$id' AND user_id = '$user_id';");
+        $statement->execute();
+    }
+
+    public function deleteGalleryImageKey($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM image_gallery WHERE gallery_id = '$id'");
+        $statement->execute();
+    }
+
+    public function deleteGalleryCommentKey($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM comment WHERE gallery_id = '$id'");
+        $statement->execute();
+    }
+
+    public function deleteGallery($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM gallery WHERE id = '$id'");
+        $statement->execute();
+    }
+
 
     //End Galleries
 
@@ -322,6 +371,22 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getNumOfYourImages($user_id)
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM image WHERE user_id = '$user_id' AND nsfw = 0 AND hidden = 0");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getNumOfYourAllImages($user_id)
+    {
+        $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM image WHERE user_id = '$user_id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function editImageByModerator($nsfw, $hidden, $id)
     {
         $statement = $this->pdo->prepare("UPDATE image SET nsfw = '$nsfw', hidden = '$hidden' WHERE id = '$id'");
@@ -368,6 +433,48 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function createImage($file_name, $slug, $user_id, $gallery_name)
+    {
+        $statement = $this->pdo->prepare ("INSERT INTO image (user_id, file_name, slug)
+        VALUES ('$user_id', '$file_name', '$slug');");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function AddToTableImageGallery($image_id, $gallery_id)
+    {
+        $statement = $this->pdo->prepare("INSERT INTO image_gallery (image_id, gallery_id)
+            VALUES ('$image_id', '$gallery_id')");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function editImage($name, $slug, $id, $user_id)
+    {
+        $statement = $this->pdo->prepare("UPDATE image SET file_name = '$name', slug = '$slug' WHERE id = '$id' AND user_id = '$user_id';");
+        $statement->execute();
+    }
+
+    public function deleteImageGalleryKey($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM image_gallery WHERE image_id = '$id'");
+        $statement->execute();
+    }
+
+    public function deleteImageCommentKey($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM comment WHERE image_id = '$id'");
+        $statement->execute();
+    }
+
+    public function deleteImage($id)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM image WHERE id = '$id'");
+        $statement->execute();
+    }
+
     //End Images
 
     //User
@@ -412,15 +519,29 @@ class Database
 
     public function moderatorImageLogging($user_id, $username, $id, $name, $action)
     {
+        $url = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $statement = $this->pdo->prepare("INSERT INTO moderator_logging (moderator_id, image_id, action)
-        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio sliku ','$name', ' - http://localhost:8888/photo_detail?id=', '$id', ' da ', '$action'));");
+        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio sliku ','$name', ' - $url', ' da ', '$action'));");
         $statement->execute();
     }
 
     public function moderatorGalleryLogging($user_id, $username, $id, $name, $action)
     {
+        $url = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         $statement = $this->pdo->prepare("INSERT INTO moderator_logging (moderator_id, gallery_id, action)
-        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio galeriju ','$name', ' - http://localhost:8888/gallery_detail?id=', '$id', ' da ', '$action'));");
+        VALUES ($user_id, $id, CONCAT('Moderator ', '$username', ' oznacio galeriju ','$name', ' - $url', ' da ', '$action'));");
+        $statement->execute();
+    }
+
+    public function changeStatus($id, $status)
+    {
+        $statement = $this->pdo->prepare("UPDATE user SET status = '$status' WHERE id = '$id'");
+        $statement->execute();
+    }
+
+    public function changeRole($id, $role)
+    {
+        $statement = $this->pdo->prepare("UPDATE user SET role = '$role' WHERE id = '$id'");
         $statement->execute();
     }
 

@@ -1,11 +1,11 @@
 <?php
 
-use app\core\page\ImageLoad;
+use app\core\page\PageImage;
 
 $this->title = 'Photos';
 $this->view = 'photos';
 
-$content = new ImageLoad(); 
+$content = new PageImage(); 
 $numOfPages = $content->numOfPages();
 
 if(key_exists('page',$_GET))
@@ -61,28 +61,28 @@ else
             if($numOfPages - $page > 2):
         ?>
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>" id="buttonPreNext">Previous</a>
+            <a href="/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>">Previous</a>
             <div class="tm-paging d-flex">
-                <a href="http://localhost:8888/photos?page=<?php echo $pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="/photos?page=<?php echo $pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
+                <a href="/photos?page=<?php echo ++$pageNum; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $pageNum; ?></a>
             </div>
-            <a href="http://localhost:8888/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>" id="buttonPreNext">Next</a>
+            <a href="/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>">Next</a>
         </div>
         <?php endif;?>
         <?php 
             if($numOfPages - $page <= 2): 
         ?>
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
-            <a href="http://localhost:8888/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>" id="buttonPreNext">Previous</a>
+            <a href="/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>">Previous</a>
             <div class="tm-paging d-flex">
-                <a href="http://localhost:8888/photos?page=<?php echo $pageNum = $numOfPages - 3; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 3; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo $pageNum = $numOfPages - 2; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 2; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo $pageNum = $numOfPages - 1; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 1; ?></a>
-                <a href="http://localhost:8888/photos?page=<?php echo $pageNum = $numOfPages; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages; ?></a>
+                <a href="/photos?page=<?php echo $pageNum = $numOfPages - 3; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 3; ?></a>
+                <a href="/photos?page=<?php echo $pageNum = $numOfPages - 2; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 2; ?></a>
+                <a href="/photos?page=<?php echo $pageNum = $numOfPages - 1; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages - 1; ?></a>
+                <a href="/photos?page=<?php echo $pageNum = $numOfPages; ?>" class="<?php if($pageNum == $page){ echo 'active'; }?> tm-paging-link"><?php echo $numOfPages; ?></a>
             </div>
-            <a href="http://localhost:8888/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>" id="buttonPreNext">Next</a>
+            <a href="/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>">Next</a>
         </div>  
         <?php endif; ?>          
     </div>
