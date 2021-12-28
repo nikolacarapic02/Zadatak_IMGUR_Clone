@@ -47,13 +47,16 @@ class PageUser
     {
         $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
 
-        if($image[0]['user_id'] == Application::$app->session->get('user'))
+        if(!empty($image))
         {
-            return true;
-        }
-        else
-        {
-            return false;
+            if($image[0]['user_id'] == Application::$app->session->get('user'))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -61,13 +64,16 @@ class PageUser
     {
         $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
 
-        if($gallery[0]['user_id'] == Application::$app->session->get('user'))
+        if(!empty($gallery))
         {
-            return true;
-        }
-        else
-        {
-            return false;
+            if($gallery[0]['user_id'] == Application::$app->session->get('user'))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 

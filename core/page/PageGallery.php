@@ -29,7 +29,23 @@ class PageGallery
             $this->page = 1;
         }
     
-        $this->galleries = Application::$app->db->getGaleries($this->page);
+        if(Application::$app->session->get('user'))
+        {
+            $user = new PageUser(Application::$app->session->get('user'));
+            if($user->isModerator() || $user->isAdmin())
+            {
+                $this->galleries = Application::$app->db->getAllGaleries($this->page);
+            }
+            else
+            {
+                $this->galleries = Application::$app->db->getGaleries($this->page);
+            }
+        }
+        else
+        {
+            $this->galleries = Application::$app->db->getGaleries($this->page);
+        }
+
         $this->i = 0;
     }
 
@@ -63,16 +79,6 @@ class PageGallery
 
     public function get()
     {
-        if(Application::$app->session->get('user'))
-        {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $this->galleries = Application::$app->db->getAllGaleries($this->page);
-            }
-        }
-
         while($this->i < count($this->galleries)){
             $instance = new PageUser($this->galleries[$this->i]['user_id']);
             $user = $instance->get();

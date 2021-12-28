@@ -90,16 +90,7 @@ if(isset($_POST['submitImage']))
                     </div>
                     <div class="form-group">
                         <input type="text" name="gallery_name" class="form-control <?php if($errorImage == 1 || $errorImage == 2){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Name">
-                        <?php 
-                            if($errorImage == 1)
-                            {
-                                $form->check($errorImage, 'gallery name', 'image');
-                            }
-                            else
-                            {
-                                $form->checkGallery($errorImage);
-                            }
-                        ?>
+                        <?php $form->check($errorImage, 'gallery name', 'image');?>
                     </div>
                     <div class="form-group">
 		                <input type="file" name="file" class="btn" id="exampleInputPassword1" placeholder="Password">

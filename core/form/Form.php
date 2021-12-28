@@ -40,32 +40,24 @@ class Form
         }
         else
         {
-            echo sprintf('
+            if($error == 2)
+            {
+                echo 
+                    '<div class="invalid-feedback">
+                        There is no gallery with that name
+                    </div>'
+                ;
+            }
+            else
+            {
+                echo sprintf('
                 <small id="emailHelp" class="form-text text-muted">Add a %s to your %s.</small>
                 ',
                 $attribute,
                 $type
-            );
-
-        }
-    }
-
-    public function checkGallery($error)
-    {
-        if($error == 2)
-        {
-            echo 
-                '<div class="invalid-feedback">
-                    There is no gallery with that name
-                </div>'
-            ;
-        }
-        else
-        {
-            if($error == 0)
-            {
-                echo '<small id="emailHelp" class="form-text text-muted">Add a gallery name to your image.</small>';
+                );
             }
+    
         }
     }
 }

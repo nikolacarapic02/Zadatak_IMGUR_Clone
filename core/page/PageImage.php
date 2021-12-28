@@ -15,7 +15,7 @@ class PageImage
     {
         if(key_exists('page',$_GET))
         {
-            if(is_numeric($_GET['page']) && $_GET['page'] != 0)
+            if(is_numeric($_GET['page']) && $_GET['page'] > 0)
             {
                 $this->page = $_GET['page']; 
             }
@@ -28,8 +28,24 @@ class PageImage
         {
             $this->page = 1;
         }
-        
-        $this->images = Application::$app->db->getImages($this->page);
+
+        if(Application::$app->session->get('user'))
+        {
+            $user = new PageUser(Application::$app->session->get('user'));
+            if($user->isModerator() || $user->isAdmin())
+            {
+                $this->images = Application::$app->db->getAllImages($this->page);
+            }
+            else
+            {
+                $this->images = Application::$app->db->getImages($this->page);
+            }
+        }
+        else
+        {
+            $this->images = Application::$app->db->getImages($this->page);
+        }
+    
         $this->i = 0;
     }
 
@@ -63,16 +79,6 @@ class PageImage
     
     public function get()
     {
-        if(Application::$app->session->get('user'))
-        {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $this->images = Application::$app->db->getAllImages($this->page);
-            }
-        }
-
         while($this->i < count($this->images)){
             $instance = new PageUser($this->images[$this->i]['user_id']);
             $user = $instance->get();
