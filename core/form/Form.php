@@ -28,9 +28,9 @@ class Form
         return new Field($model, $attribute);
     }
 
-    public function check($error , $attribute)
+    public function check($error , $attribute, $type)
     {
-        if($error)
+        if($error == 1)
         {
             echo 
                 '<div class="invalid-feedback">
@@ -41,10 +41,31 @@ class Form
         else
         {
             echo sprintf('
-                <small id="emailHelp" class="form-text text-muted">Add a %s to your gallery.</small>
+                <small id="emailHelp" class="form-text text-muted">Add a %s to your %s.</small>
                 ',
-                $attribute
+                $attribute,
+                $type
             );
+
+        }
+    }
+
+    public function checkGallery($error)
+    {
+        if($error == 2)
+        {
+            echo 
+                '<div class="invalid-feedback">
+                    There is no gallery with that name
+                </div>'
+            ;
+        }
+        else
+        {
+            if($error == 0)
+            {
+                echo '<small id="emailHelp" class="form-text text-muted">Add a gallery name to your image.</small>';
+            }
         }
     }
 }

@@ -58,7 +58,20 @@ else
             $pageNumNext = $page+1;
         ?>
         <?php 
-            if($numOfPages - $page > 2):
+            if($numOfPages <= 4):
+        ?>
+        <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
+            <a href="/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>" >Previous</a>
+            <div class="tm-paging d-flex">
+                <a href="/photos?page=1" class="btn <?php if($pageNum == $page){ echo 'active'; }?> <?php if($pageNum > $numOfPages){ echo 'disabled'; }?> tm-paging-link"><?php echo $pageNum = 1; $pageNum++;?></a>
+                <a href="/photos?page=2" class="btn <?php if($pageNum == $page){ echo 'active'; }?> <?php if($pageNum > $numOfPages){ echo 'disabled'; }?> tm-paging-link"><?php echo $pageNum++; ?></a>
+                <a href="/photos?page=3" class="btn <?php if($pageNum == $page){ echo 'active'; }?> <?php if($pageNum > $numOfPages){ echo 'disabled'; }?> tm-paging-link"><?php echo $pageNum++; ?></a>
+                <a href="/photos?page=4" class="btn <?php if($pageNum == $page){ echo 'active'; }?> <?php if($pageNum > $numOfPages){ echo 'disabled'; }?> tm-paging-link"><?php echo $pageNum++; ?></a>
+            </div>
+            <a href="/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>" >Next</a>
+        </div>
+        <?php 
+            elseif($numOfPages - $page > 2):
         ?>
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
             <a href="/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>">Previous</a>
@@ -70,9 +83,8 @@ else
             </div>
             <a href="/photos?page=<?php echo $pageNumNext; ?>" class="btn btn-primary tm-btn-next mb-2 <?php if($page == $numOfPages){echo 'disabled';} ?>">Next</a>
         </div>
-        <?php endif;?>
         <?php 
-            if($numOfPages - $page <= 2): 
+            elseif($numOfPages - $page <= 2): 
         ?>
         <div class="col-12 d-flex justify-content-between align-items-center tm-paging-col">
             <a href="/photos?page=<?php echo $pageNumPre; ?>" class="btn btn-primary tm-btn-prev mb-2 <?php if($page == 1){echo 'disabled';} ?>">Previous</a>

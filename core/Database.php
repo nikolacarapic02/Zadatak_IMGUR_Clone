@@ -162,7 +162,15 @@ class Database
 
     public function getGalleryByName($gallery_name)
     {
-        $statement = $this->pdo->prepare("SELECT id FROM gallery WHERE name = '$gallery_name';");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE name = '$gallery_name';");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getYourGalleryByName($gallery_name, $user_id)
+    {
+        $statement = $this->pdo->prepare("SELECT id FROM gallery WHERE name = '$gallery_name' AND user_id = '$user_id';");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -266,8 +274,8 @@ class Database
     
     public function createGallery($name, $slug, $description, $user_id)
     {
-        $statement = $this->pdo->prepare("INSERT INTO gallery (user_id, name, description, slug)
-        VALUES ('$user_id', '$name', '$description', '$slug');");
+        $statement = $this->pdo->prepare("INSERT INTO gallery (user_id, name, description, slug, nsfw, hidden)
+        VALUES ('$user_id', '$name', '$description', '$slug', 0, 0);");
         $statement->execute();
 
     }
@@ -435,8 +443,8 @@ class Database
 
     public function createImage($file_name, $slug, $user_id, $gallery_name)
     {
-        $statement = $this->pdo->prepare ("INSERT INTO image (user_id, file_name, slug)
-        VALUES ('$user_id', '$file_name', '$slug');");
+        $statement = $this->pdo->prepare ("INSERT INTO image (user_id, file_name, slug, nsfw, hidden)
+        VALUES ('$user_id', '$file_name', '$slug', 0, 0);");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);

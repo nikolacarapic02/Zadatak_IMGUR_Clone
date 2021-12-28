@@ -220,7 +220,7 @@ class PageGallery
             $user[0]['id'],
             $user[0]['username'],
             $gallery[0]['description'],
-            $gallery[0]['slug']
+            $gallery[0]['name']
         );
 
         while($this->i < count($imagesId))

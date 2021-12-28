@@ -2,6 +2,7 @@
 namespace app\core\page;
 
 use app\core\Application;
+use app\core\exceptions\NotFoundException;
 
 class PageUser
 {
@@ -70,10 +71,32 @@ class PageUser
         }
     }
 
+    public function isYourGalleryName($name)
+    {
+        $gallery = Application::$app->db->getGalleryByName($name);
+
+        if(!empty($gallery))
+        {
+            if($gallery[0]['user_id'] == Application::$app->session->get('user'))
+            {
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public function isYourProfile($id)
     {
         $instance = new PageUser($id);
         $user = $instance->get();
+
+        if(empty($user))
+        {
+            throw new NotFoundException();
+        }
 
         if($user[0]['id'] == Application::$app->session->get('user'))
         {
@@ -114,6 +137,11 @@ class PageUser
         $registeredUser = new PageUser(Application::$app->session->get('user'));
         $user = $registeredUser->get();
 
+        if(empty($user))
+        {
+            throw new NotFoundException();
+        }
+
         echo sprintf('
             <div class="container-fluid tm-container-content tm-mt-60">
                 <div class="row tm-mb-50">            
@@ -147,6 +175,11 @@ class PageUser
     {
         $registeredUser = new PageUser($id);
         $user = $registeredUser->get();
+
+        if(empty($user))
+        {
+            throw new NotFoundException();
+        }
 
         echo sprintf('
             <div class="container-fluid tm-container-content tm-mt-60">

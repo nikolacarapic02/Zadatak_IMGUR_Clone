@@ -194,6 +194,7 @@ if(Application::$app->session->get('user'))
                         </div>
                         <div class="form-group">
                             <textarea rows="8" name="description" class="form-control rounded-0" placeholder="New Description"></textarea>
+                            <small id="emailHelp" class="form-text text-muted">Add a new gallery description.</small>
                         </div>
                         <div class="form-group tm-text-right">
                             <button type="submit" class="btn btn-primary" name="submit" >Edit</button>

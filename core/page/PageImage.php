@@ -560,9 +560,9 @@ class PageImage
     public function createImage($file, $slug, $gallery_name, $user_id)
     {
         $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
-        $gallery = Application::$app->db->getGalleryByName($gallery_name);
+        $gallery = Application::$app->db->getYourGalleryByName($gallery_name, $user_id);
 
-        $target_dir = "/uploads";
+        $target_dir = "uploads/";
         $target_file = $target_dir . basename($file['name']);
         $uploadOk = 1;
         $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
@@ -589,6 +589,7 @@ class PageImage
 
         Application::$app->db->createImage($file['name'], $slug, $user_id, $gallery_name);
 
+        $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
 
         Application::$app->db->AddToTableImageGallery($image[0]['id'], $gallery[0]['id']);
     }

@@ -15,8 +15,8 @@ $contentUser = new PageUser(Application::$app->session->get('user'));
 
 $registeredUser = new PageUser(Application::$app->session->get('user'));
 
-$errorImage = false;
-$errorGallery = false;
+$errorImage = 0;
+$errorGallery = 0;
 
 if(isset($_POST['submitGallery']))
 {
@@ -26,16 +26,16 @@ if(isset($_POST['submitGallery']))
         {
             $user = $contentUser->get();
             $contentGall->createGallery($_POST['name'], $_POST['slug'], $_POST['description'], $user[0]['id']);
-            $errorGallery = false;
+            $errorGallery = 0;
         }
         else
         {
-            $errorGallery = true;
+            $errorGallery = 1;
         }
     }
     else
     {
-        $errorGallery = true;
+        $errorGallery = 1;
     }
 }
 
@@ -45,18 +45,25 @@ if(isset($_POST['submitImage']))
     {
         if(!empty($_POST['slug'] && !empty($_POST['gallery_name']) && !empty($_FILES['file'])))
         {
-            $user = $contentUser->get();
-            $contentImg->createImage($_FILES['file'], $_POST['slug'], $_POST['gallery_name'], $user[0]['id']);
-            $errorImage = false;
+            if($registeredUser->isYourGalleryName($_POST['gallery_name']))
+            {
+                $user = $contentUser->get();
+                $contentImg->createImage($_FILES['file'], $_POST['slug'], $_POST['gallery_name'], $user[0]['id']);
+                $errorImage = 0;
+            }
+            else
+            {
+                $errorImage = 2;
+            }
         }
         else
         {
-            $errorImage = true;
+            $errorImage = 1;
         }
     }
     else
     {
-        $errorImage = true;
+        $errorImage = 1;
     }
 }
 
@@ -78,12 +85,21 @@ if(isset($_POST['submitImage']))
                 <h3 class="tm-text-primary">Upload Image</h3>
                 <?php $form = Form::fileFormBegin('', 'post', 'multipart/form-data'); ?>
                     <div class="form-group">
-                        <input type="text" name="slug" class="form-control <?php if($errorImage){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Image Slug">
-                        <?php $form->check($errorImage, 'slug') ?>
+                        <input type="text" name="slug" class="form-control <?php if($errorImage == 1){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Image Slug">
+                        <?php $form->check($errorImage, 'slug', 'image') ?>
                     </div>
                     <div class="form-group">
-                        <input type="text" name="gallery_name" class="form-control <?php if($errorImage){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Name">
-                        <?php $form->check($errorImage, 'gallery name') ?>
+                        <input type="text" name="gallery_name" class="form-control <?php if($errorImage == 1 || $errorImage == 2){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Name">
+                        <?php 
+                            if($errorImage == 1)
+                            {
+                                $form->check($errorImage, 'gallery name', 'image');
+                            }
+                            else
+                            {
+                                $form->checkGallery($errorImage);
+                            }
+                        ?>
                     </div>
                     <div class="form-group">
 		                <input type="file" name="file" class="btn" id="exampleInputPassword1" placeholder="Password">
@@ -97,16 +113,16 @@ if(isset($_POST['submitImage']))
                 <h3 class="tm-text-primary">Create Gallery</h3>
                 <?php $form = Form::begin('', 'post'); ?>
                     <div class="form-group">
-                        <input type="text" name="name" class="form-control <?php if($errorGallery){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Name" >
-                        <?php $form->check($errorGallery, 'name') ?>
+                        <input type="text" name="name" class="form-control <?php if($errorGallery == 1){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Name" >
+                        <?php $form->check($errorGallery, 'name', 'gallery') ?>
                     </div>
                     <div class="form-group">
-                        <input type="text" name="slug" class="form-control <?php if($errorGallery){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Slug" >
-                        <?php $form->check($errorGallery, 'slug') ?>
+                        <input type="text" name="slug" class="form-control <?php if($errorGallery == 1){ echo 'is-invalid'; }?>" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Gallery Slug" >
+                        <?php $form->check($errorGallery, 'slug', 'gallery') ?>
                     </div>
                     <div class="form-group">
-                        <textarea rows="8" name="description" class="form-control rounded-0 <?php if($errorGallery){ echo 'is-invalid'; }?>" placeholder="Description"></textarea>
-                        <?php $form->check($errorGallery, 'description') ?>
+                        <textarea rows="8" name="description" class="form-control rounded-0 <?php if($errorGallery == 1){ echo 'is-invalid'; }?>" placeholder="Description"></textarea>
+                        <?php $form->check($errorGallery, 'description', 'gallery') ?>
                     </div>
                     <div class="form-group tm-text-right">
                         <button type="submit" name="submitGallery" class="btn btn-primary">Create</button>
