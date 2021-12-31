@@ -8,15 +8,21 @@ use app\core\Response;
 use app\core\Controller;
 use app\core\Application;
 use app\models\LoginForm;
-use app\models\CreateImage;
-use app\models\CreateGallery;
 use app\core\middlewares\AuthMiddleware;
+use app\core\page\PageUser;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
-        $this->registerMiddleware(new AuthMiddleware(['profile']));
+        if(Application::isGuest())
+        {
+            $this->registerMiddleware(new AuthMiddleware(['profile', 'moderator_logging']));
+        }
+        else
+        {
+            $this->registerMiddleware(new AuthMiddleware(['moderator_logging']));
+        }
     }
 
     public function login(Request $request, Response $response)
@@ -51,10 +57,12 @@ class AuthController extends Controller
                 Application::$app->response->redirect('/');
                 exit();
             }
+            $this->setLayout('auth');
             return $this->render('register', [
                 'model' => $user
             ]);
         }
+
         $this->setLayout('auth');
         return $this->render('register', [
             'model' => $user
@@ -70,5 +78,10 @@ class AuthController extends Controller
     public function profile()
     {
         return $this->render('profile');
+    }
+
+    public function moderator_logging()
+    {
+        return $this->render('moderator_logging');
     }
 }

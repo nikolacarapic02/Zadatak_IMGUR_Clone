@@ -1,5 +1,11 @@
 <?php
 use app\core\Application;
+use app\core\page\PageUser;
+
+if(Application::$app->session->get('user'))
+{
+    $user = new PageUser(Application::$app->session->get('user'));
+}
 ?>
 
 <!doctype html>
@@ -65,6 +71,9 @@ use app\core\Application;
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <a class="dropdown-item" href="/profile">Profile</a>
+                            <?php if($user->isAdmin()):?>
+                                <a class="dropdown-item" href="/moderator_logging">Moderator Logging</a>  
+                            <?php endif; ?>
                             <a class="dropdown-item" href="/logout">Log out</a>
                         </div>
                     </div>

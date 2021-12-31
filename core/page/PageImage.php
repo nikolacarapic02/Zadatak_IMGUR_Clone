@@ -18,6 +18,11 @@ class PageImage
             if(is_numeric($_GET['page']) && $_GET['page'] > 0)
             {
                 $this->page = $_GET['page']; 
+
+                if($this->page > $this->numOfPages())
+                {
+                    $this->page = $this->numOfPages();
+                }
             }
             else
             {
@@ -85,7 +90,7 @@ class PageImage
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-5">
                     <figure class="effect-ming tm-video-item">
-                        <img src="%s" alt="Image" class="img-fluid">
+                        <img src="uploads/%s" alt="Image" class="img-fluid">
                         <figcaption class="d-flex align-items-center justify-content-center">
                             <h2>Details</h2>
                             <a href="/photo_detail?id=%s">View more</a>
@@ -99,7 +104,7 @@ class PageImage
                 ',
                 $this->images[$this->i]['file_name'],
                 $this->images[$this->i]['id'],
-                $this->images[$this->i]['slug'],
+                preg_replace('/\\.[^.\\s]{3,4}$/', '', $this->images[$this->i]['file_name']),
                 $user[0]['id'],
                 $user[0]['username']
             );
@@ -112,6 +117,11 @@ class PageImage
     {
         $instance = new PageUser($id);
         $user = $instance->get();
+
+        if($this->page > $this->numOfUserPages($id))
+        {
+            $this->page = $this->numOfUserPages($id);
+        }
 
         if(Application::$app->session->get('user'))
         {
@@ -135,7 +145,7 @@ class PageImage
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-5">
                     <figure class="effect-ming tm-video-item">
-                        <img src="%s" alt="Image" class="img-fluid">
+                        <img src="uploads/%s" alt="Image" class="img-fluid">
                         <figcaption class="d-flex align-items-center justify-content-center">
                             <h2>Details</h2>
                             <a href="/photo_detail?id=%s">View more</a>
@@ -149,7 +159,7 @@ class PageImage
                 ',
                 $this->images[$this->i]['file_name'],
                 $this->images[$this->i]['id'],
-                $this->images[$this->i]['slug'],
+                preg_replace('/\\.[^.\\s]{3,4}$/', '', $this->images[$this->i]['file_name']),
                 $user[0]['id'],
                 $user[0]['username']
             );
@@ -191,18 +201,21 @@ class PageImage
             <div class="container-fluid tm-container-content tm-mt-60">
                 <div class="row tm-mb-50">            
                     <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
-                        <img src="%s" alt="%s" class="img-fluid" id="photoDetail">
+                        <img src="uploads/%s" alt="%s" class="img-fluid" id="photoDetail">
                     </div>
                     <div class="col-xl-4 col-lg-5 col-md-6 col-sm-12">
                         <div class="tm-bg-gray tm-video-details">
                             <div class="text-center mb-5">
-                                <a href="/photo_detail?id=%s" class="btn btn-primary tm-btn-big">
+                                <a href="uploads/%s" class="btn btn-primary tm-btn-big" download="%s">
                                     <span class="fas fa-download"></span>  Download
                                 </a>
                             </div>                    
                             <div class="mb-4">
                                 <div class="mr-4 mb-2" id="Details">
                                     <span class="tm-text-gray-dark">File name: </span><span class="tm-text-primary">%s</span>
+                                </div>
+                                <div class="mr-4 mb-2" id="Details">
+                                    <span class="tm-text-gray-dark">Format: </span><span class="tm-text-primary">%s</span>
                                 </div>
                                 <div class="mr-4 mb-2 d-flex flex-wrap" id="Details">
                                     <span class="tm-text-gray-dark">Posted by: </span><a href="/user_profile?id=%s" class="tm-text"><span class="ms-2">%s</span></a>
@@ -218,9 +231,11 @@ class PageImage
             </div> 
         ',
         $image[0]['file_name'],
-        $image[0]['slug'],
-        $image[0]['slug'],
-        $image[0]['slug'],
+        preg_replace('/\\.[^.\\s]{3,4}$/', '', $image[0]['file_name']),
+        $image[0]['file_name'],
+        $image[0]['file_name'],
+        preg_replace('/\\.[^.\\s]{3,4}$/', '', $image[0]['file_name']),
+        strtoupper(substr($image[0]['file_name'], strpos($image[0]['file_name'], ".") + 1)),
         $user[0]['id'],
         $user[0]['username']
         );
@@ -373,6 +388,11 @@ class PageImage
             {
                 $action = 'vise nije hidden';
             }
+
+            if($hidden == 0 && $hidden != $hiddenOld && $nsfw == 0 && $nsfw != $nsfwOld)
+            {
+                $action = 'vise nije ni hidden, a ni nsfw';
+            }
         }
 
         Application::$app->db->editImageByModerator($nsfw, $hidden, $id);
@@ -391,13 +411,19 @@ class PageImage
     public function editImageByAdmin($file_name, $slug, $nsfw, $hidden, $id)
     {
         $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
+        $oldName = $image[0]['file_name'];
+        $format = substr($image[0]['file_name'], strpos($image[0]['file_name'], ".") + 1);
 
         if(empty($image))
         {
             throw new NotFoundException();
         }
 
-        if($file_name == '')
+        if($file_name != '')
+        {
+            $file_name = $file_name . '.' . $format;
+        }
+        else
         {
             $file_name = $image[0]['file_name'];
         }
@@ -416,8 +442,14 @@ class PageImage
         {
             $hidden = 0;
         }
+        
 
         Application::$app->db->editImageByAdmin($file_name, $slug, $nsfw, $hidden, $id);
+
+        if(file_exists("uploads/$oldName"))
+        {
+            rename("uploads/$oldName", "uploads/$file_name");
+        }
     }
 
     public function numOfPages()
@@ -485,16 +517,16 @@ class PageImage
 
             if($registeredUser->isModerator() || $registeredUser->isAdmin())
             {
-                $images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
+                $this->images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
             }
             else
             {
-                $images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
+                $this->images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
             }
         }
         else
         {
-            $images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
+            $this->images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
         }
 
         echo sprintf('
@@ -510,7 +542,7 @@ class PageImage
             $user[0]['username']
         );
 
-        if(empty($images))
+        if(empty($this->images))
         {
             echo sprintf('
                     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
@@ -526,12 +558,12 @@ class PageImage
         }
         else
         {
-            while($this->i < count($images))
+            while($this->i < count($this->images))
             {
                 echo sprintf('
                         <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
                             <figure class="effect-ming tm-video-item">
-                                <img src="%s" alt="Image" class="img-fluid">
+                                <img src="uploads/%s" alt="Image" class="img-fluid">
                                 <figcaption class="d-flex align-items-center justify-content-center">
                                     <h2>Details</h2>
                                     <a href="/photo_detail?id=%s">View more</a>
@@ -542,9 +574,9 @@ class PageImage
                             </div>
                         </div>         
                     ',
-                    $images[$this->i]['file_name'],
-                    $images[$this->i]['id'],
-                    $images[$this->i]['slug'],
+                    $this->images[$this->i]['file_name'],
+                    $this->images[$this->i]['id'],
+                    preg_replace('/\\.[^.\\s]{3,4}$/', '', $this->images[$this->i]['file_name']),
                 );
 
                 $this->i++;
@@ -603,10 +635,16 @@ class PageImage
     public function editImage($id, $name, $slug)
     {
         $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
+        $oldName = $image[0]['file_name'];
+        $format = substr($image[0]['file_name'], strpos($image[0]['file_name'], ".") + 1);
         
         if(!empty($image))
         {   
-            if($name == '')
+            if($name != '')
+            {
+                $name = $name . '.' . $format;
+            }
+            else
             {
                 $name = $image[0]['file_name'];
             }
@@ -617,14 +655,27 @@ class PageImage
             }
 
             Application::$app->db->editImage($name, $slug, $image[0]['id'], Application::$app->session->get('user'));
+
+            if(file_exists("uploads/$oldName"))
+            {
+                rename("uploads/$oldName", "uploads/$name");
+            }
         }
     }
 
     public function deleteImage($id)
     {
+        $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
+        $filename = $image[0]['file_name'];
+
         Application::$app->db->deleteImageGalleryKey($id);
         Application::$app->db->deleteImageCommentKey($id);
         Application::$app->db->deleteImage($id);
+
+        if(file_exists("uploads/$filename"))
+        {
+            unlink("uploads/$filename");
+        }
     }
 
 }

@@ -15,9 +15,14 @@ class PageGallery
     {
         if(key_exists('page',$_GET))
         {
-            if(is_numeric($_GET['page']) &&  $_GET['page'] != 0)
+            if(is_numeric($_GET['page']) &&  $_GET['page'] > 0)
             {
                 $this->page = $_GET['page']; 
+
+                if($this->page > $this->numOfPages())
+                {
+                    $this->page = $this->numOfPages();
+                }
             }
             else
             {
@@ -111,6 +116,11 @@ class PageGallery
     {
         $instance = new PageUser($id);
         $user = $instance->get();
+
+        if($this->page > $this->numOfUserPages($id))
+        {
+            $this->page = $this->numOfUserPages($id);
+        }
 
         if(Application::$app->session->get('user'))
         {
@@ -228,6 +238,15 @@ class PageGallery
             $gallery[0]['description'],
             $gallery[0]['name']
         );
+
+        if(empty($imagesId))
+        {
+            echo sprintf('
+                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-1 mt-2">
+                    <p class="comment-text">There is no galleries</p>
+                </div>   
+            ');
+        }
 
         while($this->i < count($imagesId))
         {
@@ -416,7 +435,7 @@ class PageGallery
 
         if($nsfw == 1 && $hidden == 1)
         {
-            $action = 'hidden i nsfw';
+            $action = 'je hidden i nsfw';
         }
         else
         {
@@ -438,6 +457,11 @@ class PageGallery
             if($hidden == 0 && $hidden != $hiddenOld)
             {
                 $action = 'vise nije hidden';
+            }
+            
+            if($hidden == 0 && $hidden != $hiddenOld && $nsfw == 0 && $nsfw != $nsfwOld)
+            {
+                $action = 'vise nije ni hidden, a ni nsfw';
             }
         }
 
@@ -463,9 +487,6 @@ class PageGallery
             throw new NotFoundException();
         }
 
-        $nsfwOld = $gallery[0]['nsfw'];
-        $hiddenOld = $gallery[0]['hidden'];
-
         if($name == '')
         {
             $name = $gallery[0]['name'];
@@ -484,21 +505,11 @@ class PageGallery
         if($nsfw == '')
         {
             $nsfw = 0;
-
-            if($nsfw != $nsfwOld)
-            {
-                $nsfw = 1;
-            }
         }
    
         if($hidden == '')
         {
             $hidden = 0;
-
-            if($hidden != $hiddenOld)
-            {
-                $hidden = 1;
-            }
         }
 
         Application::$app->db->editGalleryByAdmin($name, $slug, $nsfw, $hidden, $description, $id);

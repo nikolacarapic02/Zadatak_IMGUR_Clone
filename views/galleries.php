@@ -3,30 +3,11 @@
 use app\core\page\PageGallery;
 
 $this->title = 'Galleries';
+$this->view = 'galleries';
 
 $content = new PageGallery(); 
 $numOfPages = $content->numOfPages();
-
-if(key_exists('page',$_GET))
-{
-    if(is_numeric($_GET['page']) && $_GET['page'] != 0)
-    {
-        $page = $_GET['page'];
-
-        if($page > $numOfPages)
-        {
-            $page = $numOfPages;
-        }
-    }
-    else 
-    {
-        $page = 1;
-    }
-}
-else
-{
-    $page = 1;
-}
+$page = $content->page;
 
 ?>
 <div class="container-fluid tm-container-content tm-mt-60">

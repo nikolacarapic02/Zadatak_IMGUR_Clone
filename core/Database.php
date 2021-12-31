@@ -176,24 +176,6 @@ class Database
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function getImagesFromGallery($id)
-    {
-        $statement = $this->pdo->prepare("SELECT ig.image_id, ig.gallery_id
-        FROM image_gallery ig
-        WHERE ig.gallery_id = $id AND ig.image_id IN(SELECT id FROM image WHERE nsfw = 0 AND hidden = 0)");
-        $statement->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function getAllImagesFromGallery($id)
-    {
-        $statement = $this->pdo->prepare("SELECT image_id FROM image_gallery WHERE gallery_id = '$id'");
-        $statement->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
     public function getNumOfGalleries()
     {
         $statement = $this->pdo->prepare("SELECT COUNT(id) as 'num' FROM gallery WHERE nsfw = 0 AND hidden = 0");
@@ -358,6 +340,24 @@ class Database
     public function getSingleImageBySlugWithoutRule($slug)
     {
         $statement = $this->pdo->prepare("SELECT * FROM image WHERE slug = '$slug'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getAllImagesFromGallery($id)
+    {
+        $statement = $this->pdo->prepare("SELECT image_id FROM image_gallery WHERE gallery_id = '$id'");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getImagesFromGallery($id)
+    {
+        $statement = $this->pdo->prepare("SELECT ig.image_id, ig.gallery_id
+        FROM image_gallery ig
+        WHERE ig.gallery_id = $id AND ig.image_id IN(SELECT id FROM image WHERE nsfw = 0 AND hidden = 0)");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -551,6 +551,14 @@ class Database
     {
         $statement = $this->pdo->prepare("UPDATE user SET role = '$role' WHERE id = '$id'");
         $statement->execute();
+    }
+
+    public function getModeratorLogging()
+    {
+        $statement = $this->pdo->prepare("SELECT * FROM moderator_logging");
+        $statement->execute();
+
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     //End User

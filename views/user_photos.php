@@ -12,33 +12,10 @@ if(!key_exists('id', $_GET) || !is_numeric($_GET['id']))
     throw new NotFoundException();
 }
 
-
 $content = new PageImage(); 
+$numOfPages = $content->numOfUserPages($_GET['id']);
 $instance = new PageUser($_GET['id']);
 $user = $instance->get();
-
-$numOfPages = $content->numOfUserPages($user[0]['id']);
-
-if(key_exists('page',$_GET))
-{
-    if(is_numeric($_GET['page']) && $_GET['page'] != 0)
-    {
-        $page = $_GET['page'];
-
-        if($page > $numOfPages)
-        {
-            $page = $numOfPages;
-        }
-    }
-    else 
-    {
-        $page = 1;
-    }
-}
-else
-{
-    $page = 1;
-}
 
 ?>
 <div class="container-fluid tm-container-content tm-mt-60">
@@ -51,6 +28,7 @@ else
     <div class="row tm-mb-90 tm-gallery">
     <?php
         $content->getUserImages($_GET['id']);
+        $page = $content->page;
     ?>
     </div>
     <div class="row tm-mb-90">

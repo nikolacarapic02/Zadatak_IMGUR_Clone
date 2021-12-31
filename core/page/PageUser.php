@@ -251,4 +251,70 @@ class PageUser
 
         Application::$app->db->changeRole($id, $role);
     }
+
+    public function getModeratorLogging()
+    {
+        $content = Application::$app->db->getModeratorLogging();
+        $i = 0;
+
+        if(empty($content))
+        {
+
+        }
+        else
+        {
+            echo sprintf('
+                <div class="container-fluid">
+                    <div class="container-table100 table-responsive"> 
+                        <div class="wrap-table100">
+                            <div class="table100 m-b-110">
+                                <div class="table100-head">
+                                    <table>
+                                        <thead>
+                                            <tr class="row100 head">
+                                                <th class="cell100 column1">Moderator ID</th>
+                                                <th class="cell100 column2">Image ID</th>
+                                                <th class="cell100 column3">Gallery ID</th>
+                                                <th class="cell100 column4">Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+            
+                                <div class="table100-body js-pscroll">
+                                    <table>
+                                        <tbody>
+                '
+            );
+
+            while($i < count($content))
+            {
+                echo sprintf('
+                <tr class="row100 body">
+                    <td class="cell100 column1">%s</td>
+                    <td class="cell100 column2">%s</td>
+                    <td class="cell100 column3">%s</td>
+                    <td class="cell100 column4">%s</td>
+                </tr>
+                ',
+                $content[$i]['moderator_id'],
+                empty($content[$i]['image_id']) ? 'empty' : $content[$i]['image_id'],
+                empty($content[$i]['gallery_id']) ? 'empty' : $content[$i]['gallery_id'],
+                $content[$i]['action']
+                );
+            
+                $i++;
+            }
+
+            echo sprintf('
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ');
+        }
+    }
 }

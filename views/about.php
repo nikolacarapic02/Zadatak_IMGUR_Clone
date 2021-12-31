@@ -1,5 +1,6 @@
 <?php
 $this->title = 'About';
+$this->view = 'about';
 ?>
 <div class="container-fluid tm-mt-60">
     <div class="row mb-4">

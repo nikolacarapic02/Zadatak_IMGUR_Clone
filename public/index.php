@@ -41,5 +41,6 @@ $app->router->get('/gallery_detail', [SiteController::class, 'gallery_detail']);
 $app->router->post('/gallery_detail', [SiteController::class, 'gallery_detail']);
 $app->router->get('/user_galleries', [SiteController::class, 'user_galleries']);
 $app->router->get('/about', [SiteController::class, 'about']);
+$app->router->get('/moderator_logging', [AuthController::class, 'moderator_logging']);
 
 $app->run();
