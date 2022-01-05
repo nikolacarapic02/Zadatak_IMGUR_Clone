@@ -3,16 +3,19 @@
 namespace app\core\page;
 
 use app\core\Application;
+use app\core\cache\Cache;
 use app\core\exceptions\NotFoundException;
 
-class PageImage 
+class PageImage extends Cache
 {
     public array $images = [];
-    public int $i = 0;
+    public int $i;
     public string $page = '';
-    
+
     public function __construct()
     {
+        parent::__construct();
+
         if(key_exists('page',$_GET))
         {
             if(is_numeric($_GET['page']) && $_GET['page'] > 0)
@@ -34,23 +37,6 @@ class PageImage
             $this->page = 1;
         }
 
-        if(Application::$app->session->get('user'))
-        {
-            $user = new PageUser(Application::$app->session->get('user'));
-            if($user->isModerator() || $user->isAdmin())
-            {
-                $this->images = Application::$app->db->getAllImages($this->page);
-            }
-            else
-            {
-                $this->images = Application::$app->db->getImages($this->page);
-            }
-        }
-        else
-        {
-            $this->images = Application::$app->db->getImages($this->page);
-        }
-    
         $this->i = 0;
     }
 
@@ -81,10 +67,60 @@ class PageImage
             return false;
         }
     }
+
+    public function checkContentToLoad()
+    {
+        if(Application::$app->session->get('user'))
+        {
+            $user = new PageUser(Application::$app->session->get('user'));
+
+            if($user->isModerator() || $user->isAdmin())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
     
     public function get()
     {
-        while($this->i < count($this->images)){
+        if($this->checkContentToLoad())
+        {
+            $this->images = Application::$app->db->getAllImagesForPage($this->page);
+
+            if($this->isCached('images_all_page_'.$this->page))
+            {   
+                $this->images = $this->getCachedImages($this->page);
+            }
+            else
+            {
+                $this->cacheImages($this->page);
+            }
+
+        }
+        else
+        {
+            $this->images = Application::$app->db->getImagesForPage($this->page);
+
+            if($this->isCached('images_page_'.$this->page))
+            {   
+                $this->images = $this->getCachedImages($this->page);
+            }
+            else
+            {
+                $this->cacheImages($this->page);
+            }
+        }
+
+        for($this->i = 0; $this->i < count($this->images); $this->i++)
+        {
             $instance = new PageUser($this->images[$this->i]['user_id']);
             $user = $instance->get();
             echo sprintf('
@@ -108,8 +144,6 @@ class PageImage
                 $user[0]['id'],
                 $user[0]['username']
             );
-
-            $this->i++;
         }
     }
 
@@ -123,25 +157,16 @@ class PageImage
             $this->page = $this->numOfUserPages($id);
         }
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $this->images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
-            }
-            else
-            {
-                $this->images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
-            }
+            $this->images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
         }
         else
         {
             $this->images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
         }
 
-        while($this->i < count($this->images)){
+        for($this->i = 0; $this->i < count($this->images); $this->i++){
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-5">
                     <figure class="effect-ming tm-video-item">
@@ -163,26 +188,15 @@ class PageImage
                 $user[0]['id'],
                 $user[0]['username']
             );
-
-            $this->i++;
         }
 
     }
 
     public function details($id)
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
-            }
-            else
-            {
-                $image = Application::$app->db->getSingleImageById($id);
-            }
+            $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
         }
         else
         {
@@ -243,18 +257,9 @@ class PageImage
 
     public function getComments($id)
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
-            }
-            else
-            {
-                $image = Application::$app->db->getSingleImageById($id);
-            }
+            $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
         }
         else
         {
@@ -281,7 +286,7 @@ class PageImage
         }
         else
         {
-            while($this->i < count($comments))
+            for($this->i = 0; $this->i < count($comments); $this->i++)
             {
                 $instance = new PageUser($comments[$this->i]['user_id']);
                 $commentedUser = $instance->get();
@@ -302,8 +307,6 @@ class PageImage
                     $commentedUser[0]['username'],
                     $comments[$this->i]['comment']
                 );
-
-                $this->i++;
             }
         }
     }
@@ -312,18 +315,9 @@ class PageImage
     {
         $userId = Application::$app->session->get('user');
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
-            }
-            else
-            {
-                $image = Application::$app->db->getSingleImageById($id);
-            }
+            $image = Application::$app->db->getSingleImageByIdWithoutRule($id);
         }
         else
         {
@@ -454,18 +448,9 @@ class PageImage
 
     public function numOfPages()
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $num = Application::$app->db->getNumOfAllImages();
-            }
-            else
-            {
-                $num = Application::$app->db->getNumOfImages();
-            }
+            $num = Application::$app->db->getNumOfAllImages();
         }
         else
         {
@@ -482,18 +467,9 @@ class PageImage
         $instance = new PageUser($id);
         $user = $instance->get();
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-            
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $num = Application::$app->db->getNumOfYourAllImages($user[0]['id']);
-            }
-            else
-            {
-                $num = Application::$app->db->getNumOfYourImages($user[0]['id']);
-            }
+            $num = Application::$app->db->getNumOfYourAllImages($user[0]['id']);
         }
         else
         {
@@ -507,22 +483,12 @@ class PageImage
 
     public function imagesForUser($id)
     {
-        $this->i = 0;
         $instance = new PageUser($id);
         $user = $instance->get();
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $this->images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
-            }
-            else
-            {
-                $this->images = Application::$app->db->getImagesForUser($user[0]['id'], $this->page);
-            }
+            $this->images = Application::$app->db->getAllImagesForUser($user[0]['id'], $this->page);
         }
         else
         {
@@ -558,28 +524,26 @@ class PageImage
         }
         else
         {
-            while($this->i < count($this->images))
+            for($this->i = 0; $this->i < count($this->images); $this->i++)
             {
                 echo sprintf('
-                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
-                            <figure class="effect-ming tm-video-item">
-                                <img src="uploads/%s" alt="Image" class="img-fluid">
-                                <figcaption class="d-flex align-items-center justify-content-center">
-                                    <h2>Details</h2>
-                                    <a href="/photo_detail?id=%s">View more</a>
-                                </figcaption>                    
-                            </figure>
-                            <div class="d-flex justify-content-between tm-text-gray">
-                                <span class="tm-text-gray-light">%s</span>
-                            </div>
-                        </div>         
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
+                        <figure class="effect-ming tm-video-item">
+                            <img src="uploads/%s" alt="Image" class="img-fluid">
+                            <figcaption class="d-flex align-items-center justify-content-center">
+                                <h2>Details</h2>
+                                <a href="/photo_detail?id=%s">View more</a>
+                            </figcaption>                    
+                        </figure>
+                        <div class="d-flex justify-content-between tm-text-gray">
+                            <span class="tm-text-gray-light">%s</span>
+                        </div>
+                    </div>         
                     ',
                     $this->images[$this->i]['file_name'],
                     $this->images[$this->i]['id'],
                     preg_replace('/\\.[^.\\s]{3,4}$/', '', $this->images[$this->i]['file_name']),
                 );
-
-                $this->i++;
             }
 
             echo sprintf('
@@ -625,9 +589,7 @@ class PageImage
             move_uploaded_file($file["tmp_name"], $target_file);
         }
 
-        Application::$app->db->createImage($file['name'], $slug, $user_id, $gallery_name);
-
-        $image = Application::$app->db->getSingleImageBySlugWithoutRule($slug);
+        $image = Application::$app->db->createImage($file['name'], $slug, $user_id, $gallery_name);
 
         Application::$app->db->AddToTableImageGallery($image[0]['id'], $gallery[0]['id']);
     }

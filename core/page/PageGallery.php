@@ -3,9 +3,10 @@
 namespace app\core\page;
 
 use app\core\Application;
+use app\core\cache\Cache;
 use app\core\exceptions\NotFoundException;
 
-class PageGallery
+class PageGallery extends Cache
 {
     public array $galleries = [];
     public int $i = 0;
@@ -13,6 +14,8 @@ class PageGallery
 
     public function __construct()
     {
+        parent::__construct();
+
         if(key_exists('page',$_GET))
         {
             if(is_numeric($_GET['page']) &&  $_GET['page'] > 0)
@@ -32,23 +35,6 @@ class PageGallery
         else
         {
             $this->page = 1;
-        }
-    
-        if(Application::$app->session->get('user'))
-        {
-            $user = new PageUser(Application::$app->session->get('user'));
-            if($user->isModerator() || $user->isAdmin())
-            {
-                $this->galleries = Application::$app->db->getAllGaleries($this->page);
-            }
-            else
-            {
-                $this->galleries = Application::$app->db->getGaleries($this->page);
-            }
-        }
-        else
-        {
-            $this->galleries = Application::$app->db->getGaleries($this->page);
         }
 
         $this->i = 0;
@@ -82,9 +68,56 @@ class PageGallery
         }
     }
 
+    public function checkContentToLoad()
+    {
+        if(Application::$app->session->get('user'))
+        {
+            $user = new PageUser(Application::$app->session->get('user'));
+            if($user->isModerator() || $user->isAdmin())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public function get()
     {
-        while($this->i < count($this->galleries)){
+        if($this->checkContentToLoad())
+        {
+            $this->galleries = Application::$app->db->getAllGaleriesForPage($this->page);
+
+            if($this->isCached('galleries_all_page_'.$this->page))
+            {   
+                $this->galleries = $this->getCachedGalleries($this->page);
+            }
+            else
+            {
+                $this->cacheGalleries($this->page);
+            }
+        }
+        else
+        {
+            $this->galleries = Application::$app->db->getGalleriesForPage($this->page);
+
+            if($this->isCached('galleries_page_'.$this->page))
+            {   
+                $this->galleries = $this->getCachedGalleries($this->page);
+            }
+            else
+            {
+                $this->cacheGalleries($this->page);
+            }
+        }
+
+        for($this->i = 0; $this->i < count($this->galleries); $this->i++){
             $instance = new PageUser($this->galleries[$this->i]['user_id']);
             $user = $instance->get();
             echo sprintf('
@@ -107,8 +140,6 @@ class PageGallery
                 $user[0]['id'],
                 $user[0]['username']
             );
-
-            $this->i++;
         }
     }
 
@@ -122,25 +153,16 @@ class PageGallery
             $this->page = $this->numOfUserPages($id);
         }
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $this->galleries = Application::$app->db->getAllGalleriesForUser($user[0]['id'], $this->page);
-            }
-            else
-            {
-                $this->galleries = Application::$app->db->getGalleriesForUser($user[0]['id'], $this->page);
-            }
+            $this->galleries = Application::$app->db->getAllGalleriesForUser($user[0]['id'], $this->page);
         }
         else
         {
             $this->galleries = Application::$app->db->getGalleriesForUser($user[0]['id'], $this->page);
         }
 
-        while($this->i < count($this->galleries)){
+        for($this->i = 0; $this->i < count($this->galleries); $this->i++){
             echo sprintf('
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-5">
                     <figure class="effect-ming tm-video-item">
@@ -161,27 +183,15 @@ class PageGallery
                 $user[0]['id'],
                 $user[0]['username']
             );
-
-            $this->i++;
         }
     }
 
     public function details($id)
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
-                $imagesId = Application::$app->db->getAllImagesFromGallery($id);
-            }
-            else
-            {
-                $gallery = Application::$app->db->getSingleGallery($id);
-                $imagesId = Application::$app->db->getImagesFromGallery($id);
-            }
+            $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
+            $imagesId = Application::$app->db->getAllImagesFromGallery($id);
         }
         else
         {
@@ -194,8 +204,6 @@ class PageGallery
             throw new NotFoundException();
         }
     
-        $this->i = 0;
-
         $instance = new PageUser($gallery[0]['user_id']);
         $user = $instance->get();
         
@@ -248,20 +256,11 @@ class PageGallery
             ');
         }
 
-        while($this->i < count($imagesId))
+        for($this->i = 0; $this->i < count($imagesId); $this->i++)
         {
-            if(Application::$app->session->get('user'))
+            if($this->checkContentToLoad())
             {
-                $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-                if($registeredUser->isModerator() || $registeredUser->isAdmin())
-                {
-                    $image = Application::$app->db->getSingleImageByIdWithoutRule($imagesId[$this->i]['image_id']);
-                }
-                else
-                {
-                    $image = Application::$app->db->getSingleImageById($imagesId[$this->i]['image_id']);
-                }
+                $image = Application::$app->db->getSingleImageByIdWithoutRule($imagesId[$this->i]['image_id']);
             }
             else
             {
@@ -291,26 +290,14 @@ class PageGallery
                 $image[0]['id'],
                 $image[0]['slug'],
             );
-
-            $this->i++;
         }
     }
 
     public function getComments($id)
     {
-        $this->i = 0;
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
-            }
-            else
-            {
-                $gallery = Application::$app->db->getSingleGallery($id);
-            }
+            $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
         }
         else
         {
@@ -337,7 +324,7 @@ class PageGallery
         }
         else
         {
-            while($this->i < count($comments))
+            for($this->i = 0; $this->i < count($comments); $this->i++)
             {
                 $instance = new PageUser($comments[$this->i]['user_id']);
                 $commentedUser = $instance->get();
@@ -358,26 +345,15 @@ class PageGallery
                     $commentedUser[0]['username'],
                     $comments[$this->i]['comment']
                 );
-
-                $this->i++;
             }
         }
     }
 
     public function createComment($comment ,$id)
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
-            }
-            else
-            {
-                $gallery = Application::$app->db->getSingleGallery($id);
-            }
+            $gallery = Application::$app->db->getSingleGalleryWithoutRule($id);
         }
         else
         {
@@ -517,18 +493,9 @@ class PageGallery
 
     public function numOfPages()
     {
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $instance = Application::$app->db->getNumOfAllGalleries();
-            }
-            else
-            {
-                $instance = Application::$app->db->getNumOfGalleries();
-            }
+            $instance = Application::$app->db->getNumOfAllGalleries();
         }
         else
         {
@@ -545,18 +512,9 @@ class PageGallery
         $instance = new PageUser($id);
         $user = $instance->get();
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-            
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $num = Application::$app->db->getNumOfYourAllGalleries($user[0]['id']);
-            }
-            else
-            {
-                $num = Application::$app->db->getNumOfYourGalleries($user[0]['id']);
-            }
+            $num = Application::$app->db->getNumOfYourAllGalleries($user[0]['id']);
         }
         else
         {
@@ -570,22 +528,12 @@ class PageGallery
 
     public function galleriesOfUser($id)
     {
-        $this->i = 0;
         $instance = new PageUser($id);
         $user = $instance->get();
 
-        if(Application::$app->session->get('user'))
+        if($this->checkContentToLoad())
         {
-            $registeredUser = new PageUser(Application::$app->session->get('user'));
-
-            if($registeredUser->isModerator() || $registeredUser->isAdmin())
-            {
-                $galleries = Application::$app->db->getAllGalleriesForUser($user[0]['id'], $this->page);
-            }
-            else
-            {
-                $galleries = Application::$app->db->getGalleriesForUser($user[0]['id'], $this->page);
-            }
+            $galleries = Application::$app->db->getAllGalleriesForUser($user[0]['id'], $this->page);
         }
         else
         {
@@ -622,7 +570,7 @@ class PageGallery
         }
         else
         {
-            while($this->i < count($galleries))
+            for($this->i = 0; $this->i < count($galleries); $this->i++)
             {
                 echo sprintf('
                         <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-3 mt-2">
@@ -641,8 +589,6 @@ class PageGallery
                     $galleries[$this->i]['id'],
                     $galleries[$this->i]['name'],
                 );
-
-                $this->i++;
             }
 
             echo sprintf('

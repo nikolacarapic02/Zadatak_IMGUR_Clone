@@ -2,6 +2,7 @@
 namespace app\core\page;
 
 use app\core\Application;
+use app\core\exceptions\EmptyPageException;
 use app\core\exceptions\NotFoundException;
 
 class PageUser
@@ -255,39 +256,34 @@ class PageUser
     public function getModeratorLogging()
     {
         $content = Application::$app->db->getModeratorLogging();
-        $i = 0;
 
-        if(empty($content))
+        echo sprintf('
+            <div class="container-fluid">
+                <div class="container-table100 table-responsive"> 
+                    <div class="wrap-table100">
+                        <div class="table100 m-b-110">
+                            <div class="table100-head">
+                                <table>
+                                    <thead>
+                                        <tr class="row100 head">
+                                            <th class="cell100 column1">Moderator ID</th>
+                                            <th class="cell100 column2">Image ID</th>
+                                            <th class="cell100 column3">Gallery ID</th>
+                                            <th class="cell100 column4">Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+        
+                            <div class="table100-body js-pscroll">
+                                <table>
+                                    <tbody>
+            '
+        );
+
+        if(!empty($content))
         {
-
-        }
-        else
-        {
-            echo sprintf('
-                <div class="container-fluid">
-                    <div class="container-table100 table-responsive"> 
-                        <div class="wrap-table100">
-                            <div class="table100 m-b-110">
-                                <div class="table100-head">
-                                    <table>
-                                        <thead>
-                                            <tr class="row100 head">
-                                                <th class="cell100 column1">Moderator ID</th>
-                                                <th class="cell100 column2">Image ID</th>
-                                                <th class="cell100 column3">Gallery ID</th>
-                                                <th class="cell100 column4">Action</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </div>
-            
-                                <div class="table100-body js-pscroll">
-                                    <table>
-                                        <tbody>
-                '
-            );
-
-            while($i < count($content))
+            for($i = 0; $i < count($content); $i++)
             {
                 echo sprintf('
                 <tr class="row100 body">
@@ -302,9 +298,21 @@ class PageUser
                 empty($content[$i]['gallery_id']) ? 'empty' : $content[$i]['gallery_id'],
                 $content[$i]['action']
                 );
-            
-                $i++;
             }
+        }
+        else
+        {
+            echo sprintf('
+                <tr class="row100 body">
+                    <td class="cell100 column1">empty</td>
+                    <td class="cell100 column2">empty</td>
+                    <td class="cell100 column3">empty</td>
+                    <td class="cell100 column4">empty</td>
+                </tr>
+                ',
+            );
+
+        }
 
             echo sprintf('
                                         </tbody>
@@ -315,6 +323,5 @@ class PageUser
                     </div>
                 </div>
             ');
-        }
     }
 }

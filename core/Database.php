@@ -114,7 +114,7 @@ class Database
 
     //Galleries
 
-    public function getGaleries($page)
+    public function getGalleriesForPage($page)
     {
         $limit = 16;
         if(empty($page))
@@ -123,13 +123,13 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE nsfw = 0 AND hidden = 0 ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function getAllGaleries($page)
+    public function getAllGaleriesForPage($page)
     {
         $limit = 16;
         if(empty($page))
@@ -138,7 +138,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM gallery ORDER BY id LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -233,7 +233,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -248,7 +248,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM gallery WHERE user_id = $user_id ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -291,7 +291,7 @@ class Database
 
     //Images
 
-    public function getImages($page)
+    public function getImagesForPage($page)
     {
         $limit = 16;
         if(empty($page))
@@ -300,13 +300,13 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM image WHERE nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE nsfw = 0 AND hidden = 0 ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function getAllImages($page)
+    public function getAllImagesForPage($page)
     {
         $limit = 16;
         if(empty($page))
@@ -315,7 +315,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM image LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM image ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -347,7 +347,7 @@ class Database
 
     public function getAllImagesFromGallery($id)
     {
-        $statement = $this->pdo->prepare("SELECT image_id FROM image_gallery WHERE gallery_id = '$id'");
+        $statement = $this->pdo->prepare("SELECT image_id FROM image_gallery WHERE gallery_id = '$id' ORDER BY image_id DESC");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -357,7 +357,7 @@ class Database
     {
         $statement = $this->pdo->prepare("SELECT ig.image_id, ig.gallery_id
         FROM image_gallery ig
-        WHERE ig.gallery_id = $id AND ig.image_id IN(SELECT id FROM image WHERE nsfw = 0 AND hidden = 0)");
+        WHERE ig.gallery_id = $id AND ig.image_id IN(SELECT id FROM image WHERE nsfw = 0 AND hidden = 0) ORDER BY ig.image_id DESC");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -420,7 +420,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id AND nsfw = 0 AND hidden = 0 ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -435,7 +435,7 @@ class Database
         }
         $start = ($page-1) * $limit;
 
-        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id LIMIT $start, $limit");
+        $statement = $this->pdo->prepare("SELECT * FROM image WHERE user_id = $user_id ORDER BY id DESC LIMIT $start, $limit");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -443,20 +443,21 @@ class Database
 
     public function createImage($file_name, $slug, $user_id, $gallery_name)
     {
-        $statement = $this->pdo->prepare ("INSERT INTO image (user_id, file_name, slug, nsfw, hidden)
+        $statement = $this->pdo->prepare("INSERT INTO image (user_id, file_name, slug, nsfw, hidden)
         VALUES ('$user_id', '$file_name', '$slug', 0, 0);");
         $statement->execute();
 
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $statement1 = $this->pdo->prepare("SELECT LAST_INSERT_ID() as 'id';");
+        $statement1->execute();
+
+        return $statement1->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function AddToTableImageGallery($image_id, $gallery_id)
     {
         $statement = $this->pdo->prepare("INSERT INTO image_gallery (image_id, gallery_id)
-            VALUES ('$image_id', '$gallery_id')");
+            VALUES ($image_id, $gallery_id)");
         $statement->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function editImage($name, $slug, $id, $user_id)
@@ -497,7 +498,7 @@ class Database
 
     public function getCommentsForImage($id)
     {
-        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE image_id = $id");
+        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE image_id = $id ORDER BY id DESC");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -505,7 +506,7 @@ class Database
 
     public function getCommentsForGallery($id)
     {
-        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE gallery_id = $id");
+        $statement = $this->pdo->prepare("SELECT * FROM comment WHERE gallery_id = $id ORDER BY id DESC");
         $statement->execute();
 
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
